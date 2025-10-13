@@ -1,0 +1,236 @@
+# Fastfile for BBLearning iOS
+# This file contains the fastlane.tools configuration
+
+default_platform(:ios)
+
+platform :ios do
+  before_all do
+    # Setup environment
+    ensure_git_status_clean unless ENV['SKIP_GIT_CHECK']
+  end
+
+  # MARK: - Testing
+
+  desc "Run all tests"
+  lane :test do
+    run_tests(
+      scheme: "BBLearning",
+      devices: ["iPhone 15 Pro", "iPhone 15", "iPad Pro (12.9-inch) (6th generation)"],
+      clean: true,
+      code_coverage: true
+    )
+  end
+
+  desc "Run unit tests only"
+  lane :unit_test do
+    run_tests(
+      scheme: "BBLearning",
+      testplan: "UnitTests",
+      devices: ["iPhone 15 Pro"]
+    )
+  end
+
+  desc "Run UI tests only"
+  lane :ui_test do
+    run_tests(
+      scheme: "BBLearning",
+      testplan: "UITests",
+      devices: ["iPhone 15 Pro"]
+    )
+  end
+
+  # MARK: - Build
+
+  desc "Build for development"
+  lane :build_dev do
+    gym(
+      scheme: "BBLearning",
+      configuration: "Debug",
+      export_method: "development",
+      output_directory: "./build",
+      clean: true
+    )
+  end
+
+  desc "Build for staging"
+  lane :build_staging do
+    gym(
+      scheme: "BBLearning-Staging",
+      configuration: "Release",
+      export_method: "ad-hoc",
+      output_directory: "./build",
+      clean: true
+    )
+  end
+
+  desc "Build for production"
+  lane :build_production do
+    gym(
+      scheme: "BBLearning",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "./build",
+      clean: true
+    )
+  end
+
+  # MARK: - TestFlight
+
+  desc "Upload to TestFlight"
+  lane :beta do
+    # Ensure we're on main branch
+    ensure_git_branch(branch: "main")
+
+    # Increment build number
+    increment_build_number(
+      xcodeproj: "BBLearning.xcodeproj"
+    )
+
+    # Build the app
+    build_production
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      notify_external_testers: false,
+      changelog: "新版本更新，修复已知问题并优化性能"
+    )
+
+    # Commit version bump
+    commit_version_bump(
+      message: "chore: bump build number [skip ci]",
+      xcodeproj: "BBLearning.xcodeproj",
+      force: true
+    )
+
+    # Add git tag
+    add_git_tag(
+      tag: "v#{get_version_number}-#{get_build_number}",
+      message: "TestFlight build"
+    )
+
+    # Push to remote
+    push_to_git_remote(
+      tags: true
+    )
+
+    UI.success("🎉 Successfully uploaded to TestFlight!")
+  end
+
+  # MARK: - App Store
+
+  desc "Deploy to App Store"
+  lane :release do
+    # Ensure we're on main branch
+    ensure_git_branch(branch: "main")
+
+    # Run tests
+    test
+
+    # Increment version number
+    version = prompt(text: "Enter new version number: ")
+    increment_version_number(version_number: version)
+
+    # Increment build number
+    increment_build_number
+
+    # Build the app
+    build_production
+
+    # Upload to App Store
+    upload_to_app_store(
+      submit_for_review: false,
+      automatic_release: false,
+      force: true,
+      metadata_path: "./fastlane/metadata",
+      screenshots_path: "./fastlane/screenshots"
+    )
+
+    # Commit version bump
+    commit_version_bump(
+      message: "chore: release version #{version}",
+      xcodeproj: "BBLearning.xcodeproj"
+    )
+
+    # Create release tag
+    add_git_tag(
+      tag: "v#{version}",
+      message: "Release version #{version}"
+    )
+
+    # Push to remote
+    push_to_git_remote(
+      tags: true
+    )
+
+    UI.success("🚀 Successfully released version #{version}!")
+  end
+
+  # MARK: - Code Signing
+
+  desc "Setup code signing"
+  lane :setup_signing do
+    match(
+      type: "development",
+      readonly: true
+    )
+    match(
+      type: "appstore",
+      readonly: true
+    )
+  end
+
+  desc "Renew certificates"
+  lane :renew_signing do
+    match(
+      type: "development",
+      force_for_new_devices: true
+    )
+    match(
+      type: "appstore",
+      force: true
+    )
+  end
+
+  # MARK: - Utilities
+
+  desc "Clean build artifacts"
+  lane :clean do
+    clear_derived_data
+    clean_build_artifacts
+    UI.success("✨ Clean completed!")
+  end
+
+  desc "Update dependencies"
+  lane :update_deps do
+    # Swift Package Manager will auto-resolve
+    sh("cd .. && xcodebuild -resolvePackageDependencies")
+    UI.success("📦 Dependencies updated!")
+  end
+
+  desc "Generate screenshots"
+  lane :screenshots do
+    snapshot(
+      scheme: "BBLearning",
+      devices: [
+        "iPhone 15 Pro Max",
+        "iPhone 15 Pro",
+        "iPhone SE (3rd generation)",
+        "iPad Pro (12.9-inch) (6th generation)"
+      ],
+      languages: ["zh-Hans"]
+    )
+  end
+
+  # MARK: - Error Handling
+
+  error do |lane, exception|
+    UI.error("Error in lane #{lane}: #{exception.message}")
+    # Notify error (可以添加钉钉/企业微信通知)
+  end
+
+  after_all do |lane|
+    # Success notification
+    UI.success("Lane #{lane} completed successfully! 🎉")
+  end
+end
