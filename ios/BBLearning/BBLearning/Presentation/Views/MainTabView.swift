@@ -38,13 +38,11 @@ struct MainTabView: View {
                 .tag(2)
 
             // AI辅导
-            NavigationView {
-                AITutorView()
-            }
-            .tabItem {
-                Label("AI辅导", systemImage: "brain")
-            }
-            .tag(3)
+            AITutorView()
+                .tabItem {
+                    Label("AI辅导", systemImage: "brain")
+                }
+                .tag(3)
 
             // 我的
             NavigationView {
@@ -74,12 +72,8 @@ struct HomeView: View {
 // PracticeView is now replaced by Practice/PracticeView.swift
 // See Practice/PracticeView.swift
 
-struct AITutorView: View {
-    var body: some View {
-        Text("AI辅导")
-            .navigationTitle("AI辅导")
-    }
-}
+// AITutorView is now replaced by AITutor/AITutorView.swift
+// See AITutor/AITutorView.swift
 
 struct ProfileView: View {
     var body: some View {
