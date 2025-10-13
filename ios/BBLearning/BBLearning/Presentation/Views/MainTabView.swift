@@ -45,13 +45,11 @@ struct MainTabView: View {
                 .tag(3)
 
             // 我的
-            NavigationView {
-                ProfileView()
-            }
-            .tabItem {
-                Label("我的", systemImage: "person.fill")
-            }
-            .tag(4)
+            ProfileView()
+                .tabItem {
+                    Label("我的", systemImage: "person.fill")
+                }
+                .tag(4)
         }
         .accentColor(.primary)
     }
@@ -59,12 +57,8 @@ struct MainTabView: View {
 
 // MARK: - Placeholder Views
 
-struct HomeView: View {
-    var body: some View {
-        Text("首页")
-            .navigationTitle("BBLearning")
-    }
-}
+// HomeView is now replaced by Home/HomeView.swift
+// See Home/HomeView.swift
 
 // KnowledgeView is now replaced by KnowledgeTreeView
 // See Knowledge/KnowledgeTreeView.swift
@@ -75,12 +69,8 @@ struct HomeView: View {
 // AITutorView is now replaced by AITutor/AITutorView.swift
 // See AITutor/AITutorView.swift
 
-struct ProfileView: View {
-    var body: some View {
-        Text("个人中心")
-            .navigationTitle("我的")
-    }
-}
+// ProfileView is now replaced by Profile/ProfileView.swift
+// See Profile/ProfileView.swift
 
 #if DEBUG
 struct MainTabView_Previews: PreviewProvider {
