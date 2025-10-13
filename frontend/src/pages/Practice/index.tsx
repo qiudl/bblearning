@@ -6,7 +6,7 @@ import { Question } from '../../types';
 const { TextArea } = Input;
 
 const PracticePage: React.FC = () => {
-  const [currentQuestion, setCurrentQuestion] = useState<Question>({
+  const [currentQuestion] = useState<Question>({
     id: 1,
     knowledgePointId: 1,
     type: 'choice',

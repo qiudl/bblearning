@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: bblearning-postgres-prod
+    environment:
+      POSTGRES_USER: bblearning_prod
+      POSTGRES_PASSWORD: BBLearning2025Prod!SecureDB#
+      POSTGRES_DB: bblearning_production
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backup:/backup
+    networks:
+      - bblearning-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bblearning_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: bblearning-redis-prod
+    command: redis-server --requirepass BBLearning2025Redis!Secure# --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - bblearning-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # MinIO 对象存储
+  minio:
+    image: minio/minio:latest
+    container_name: bblearning-minio-prod
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: bblearning_minio_admin
+      MINIO_ROOT_PASSWORD: BBLearning2025MinIO!SecureKey#
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - bblearning-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bblearning-backend-prod
+    env_file:
+      - ./backend/.env.production
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/var/log/bblearning
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - bblearning-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    command: ["./wait-for-it.sh", "postgres:5432", "--", "make", "run"]
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  bblearning-network:
+    driver: bridge

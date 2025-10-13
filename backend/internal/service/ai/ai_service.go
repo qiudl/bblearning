@@ -5,44 +5,100 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/qiudl/bblearning-backend/internal/domain/dto"
 	"github.com/qiudl/bblearning-backend/internal/domain/models"
+	"github.com/qiudl/bblearning-backend/internal/pkg/crypto"
 	"github.com/qiudl/bblearning-backend/internal/repository/postgres"
+	"github.com/qiudl/bblearning-backend/internal/service"
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/spf13/viper"
 )
 
 // AIService AI服务
 type AIService struct {
-	client           *openai.Client
+	apiKeyService    service.APIKeyService
 	kpRepo           *postgres.KnowledgePointRepository
 	questionRepo     *postgres.QuestionRepository
 	recordRepo       *postgres.PracticeRecordRepository
 	progressRepo     *postgres.LearningProgressRepository
 	conversationRepo *postgres.AIConversationRepository
+	provider         string // AI服务提供商：deepseek, openai等
+	model            string // 模型名称
 }
 
 // NewAIService 创建AI服务
 func NewAIService(
+	apiKeyService service.APIKeyService,
 	kpRepo *postgres.KnowledgePointRepository,
 	questionRepo *postgres.QuestionRepository,
 	recordRepo *postgres.PracticeRecordRepository,
 	progressRepo *postgres.LearningProgressRepository,
 	conversationRepo *postgres.AIConversationRepository,
 ) *AIService {
-	apiKey := viper.GetString("openai.api_key")
-	client := openai.NewClient(apiKey)
+	// 从配置读取AI服务提供商设置
+	provider := viper.GetString("ai.provider")
+	if provider == "" {
+		provider = "deepseek" // 默认使用deepseek
+	}
+
+	model := viper.GetString("ai.model")
+	if model == "" {
+		// 根据提供商设置默认模型
+		switch provider {
+		case "deepseek":
+			model = "deepseek-chat"
+		case "openai":
+			model = "gpt-4o-mini"
+		default:
+			model = "deepseek-chat"
+		}
+	}
 
 	return &AIService{
-		client:           client,
+		apiKeyService:    apiKeyService,
 		kpRepo:           kpRepo,
 		questionRepo:     questionRepo,
 		recordRepo:       recordRepo,
 		progressRepo:     progressRepo,
 		conversationRepo: conversationRepo,
+		provider:         provider,
+		model:            model,
 	}
+}
+
+// getClient 获取OpenAI兼容的客户端（支持DeepSeek）
+func (s *AIService) getClient(ctx context.Context) (*openai.Client, error) {
+	// 从数据库获取解密的API密钥
+	apiKey, err := s.apiKeyService.GetDecrypted(ctx, s.provider, "default")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get API key for provider %s: %w", s.provider, err)
+	}
+	defer crypto.ClearString(&apiKey) // 使用完毕清除内存
+
+	// 创建客户端配置
+	config := openai.DefaultConfig(apiKey)
+
+	// 根据提供商设置BaseURL
+	switch s.provider {
+	case "deepseek":
+		baseURL := os.Getenv("DEEPSEEK_BASE_URL")
+		if baseURL == "" {
+			baseURL = "https://api.deepseek.com/v1"
+		}
+		config.BaseURL = baseURL
+	case "openai":
+		// OpenAI使用默认配置
+	default:
+		// 其他提供商可以通过环境变量配置
+		if baseURL := os.Getenv(s.provider + "_BASE_URL"); baseURL != "" {
+			config.BaseURL = baseURL
+		}
+	}
+
+	return openai.NewClientWithConfig(config), nil
 }
 
 // GenerateQuestion AI生成题目
@@ -56,9 +112,15 @@ func (s *AIService) GenerateQuestion(ctx context.Context, req *dto.AIGenerateQue
 	// 构建prompt
 	prompt := s.buildGenerateQuestionPrompt(kp, req.Difficulty, req.Type, req.Count)
 
-	// 调用OpenAI API
-	resp, err := s.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model: viper.GetString("openai.model"),
+	// 获取AI客户端
+	client, err := s.getClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AI client: %w", err)
+	}
+
+	// 调用AI API
+	resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model: s.model,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleSystem,
@@ -73,7 +135,7 @@ func (s *AIService) GenerateQuestion(ctx context.Context, req *dto.AIGenerateQue
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("openai api error: %w", err)
+		return nil, fmt.Errorf("AI API error: %w", err)
 	}
 
 	// 解析AI返回的题目
@@ -108,9 +170,15 @@ func (s *AIService) GradeAnswer(ctx context.Context, req *dto.AIGradeAnswerReque
   "key_points": ["要点1", "要点2"]
 }`, req.QuestionContent, req.StandardAnswer, req.UserAnswer)
 
-	// 调用OpenAI API
-	resp, err := s.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model: viper.GetString("openai.model"),
+	// 获取AI客户端
+	client, err := s.getClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AI client: %w", err)
+	}
+
+	// 调用AI API
+	resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model: s.model,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleSystem,
@@ -125,7 +193,7 @@ func (s *AIService) GradeAnswer(ctx context.Context, req *dto.AIGradeAnswerReque
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("openai api error: %w", err)
+		return nil, fmt.Errorf("AI API error: %w", err)
 	}
 
 	// 解析批改结果
@@ -166,15 +234,21 @@ func (s *AIService) Chat(ctx context.Context, userID uint, req *dto.AIChatReques
 		Content: req.Message,
 	})
 
-	// 调用OpenAI API
-	resp, err := s.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model:       viper.GetString("openai.model"),
+	// 获取AI客户端
+	client, err := s.getClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AI client: %w", err)
+	}
+
+	// 调用AI API
+	resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model:       s.model,
 		Messages:    messages,
 		Temperature: 0.7,
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("openai api error: %w", err)
+		return nil, fmt.Errorf("AI API error: %w", err)
 	}
 
 	reply := resp.Choices[0].Message.Content
@@ -225,9 +299,15 @@ func (s *AIService) Diagnose(ctx context.Context, userID uint, req *dto.AIDiagno
 	// 构建诊断prompt
 	prompt := s.buildDiagnosePrompt(progresses, stats, kpAccuracy)
 
-	// 调用OpenAI API
-	resp, err := s.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model: viper.GetString("openai.model"),
+	// 获取AI客户端
+	client, err := s.getClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AI client: %w", err)
+	}
+
+	// 调用AI API
+	resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model: s.model,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleSystem,
@@ -242,7 +322,7 @@ func (s *AIService) Diagnose(ctx context.Context, userID uint, req *dto.AIDiagno
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("openai api error: %w", err)
+		return nil, fmt.Errorf("AI API error: %w", err)
 	}
 
 	// 解析诊断结果
@@ -283,9 +363,15 @@ func (s *AIService) Explain(ctx context.Context, req *dto.AIExplainRequest) (*dt
   "key_concepts": ["概念1", "概念2"]
 }`
 
-	// 调用OpenAI API
-	resp, err := s.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model: viper.GetString("openai.model"),
+	// 获取AI客户端
+	client, err := s.getClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AI client: %w", err)
+	}
+
+	// 调用AI API
+	resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model: s.model,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleSystem,
@@ -300,7 +386,7 @@ func (s *AIService) Explain(ctx context.Context, req *dto.AIExplainRequest) (*dt
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("openai api error: %w", err)
+		return nil, fmt.Errorf("AI API error: %w", err)
 	}
 
 	// 解析讲解结果

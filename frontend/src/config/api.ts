@@ -1,6 +1,6 @@
 // API 配置
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:3000/api',
+  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1',
   TIMEOUT: 30000,
 };
 

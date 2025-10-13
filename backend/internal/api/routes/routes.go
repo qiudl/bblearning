@@ -1,11 +1,17 @@
 package routes
 
 import (
+	"log"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/qiudl/bblearning-backend/internal/api/handlers"
 	"github.com/qiudl/bblearning-backend/internal/api/middleware"
+	"github.com/qiudl/bblearning-backend/internal/pkg/crypto"
 	"github.com/qiudl/bblearning-backend/internal/pkg/database"
+	"github.com/qiudl/bblearning-backend/internal/repository"
 	"github.com/qiudl/bblearning-backend/internal/repository/postgres"
+	"github.com/qiudl/bblearning-backend/internal/service"
 	"github.com/qiudl/bblearning-backend/internal/service/ai"
 	"github.com/qiudl/bblearning-backend/internal/service/analytics"
 	"github.com/qiudl/bblearning-backend/internal/service/knowledge"
@@ -40,9 +46,21 @@ func Setup(r *gin.Engine) {
 	wrongQuestionService := practice.NewWrongQuestionService(wrongQuestionRepo, questionRepo, practiceService)
 	wrongQuestionHandler := handlers.NewWrongQuestionHandler(wrongQuestionService)
 
+	// API密钥管理
+	masterKey := os.Getenv("ENCRYPTION_MASTER_KEY")
+	if masterKey == "" {
+		log.Fatal("ENCRYPTION_MASTER_KEY environment variable is not set")
+	}
+	encryptor, err := crypto.NewAESEncryptorFromHex(masterKey)
+	if err != nil {
+		log.Fatalf("Failed to initialize encryptor: %v", err)
+	}
+	apiKeyRepo := repository.NewAPIKeyRepository(database.DB)
+	apiKeyService := service.NewAPIKeyService(apiKeyRepo, encryptor)
+
 	// AI集成
 	conversationRepo := postgres.NewAIConversationRepository(database.DB)
-	aiService := ai.NewAIService(kpRepo, questionRepo, recordRepo, progressRepo, conversationRepo)
+	aiService := ai.NewAIService(apiKeyService, kpRepo, questionRepo, recordRepo, progressRepo, conversationRepo)
 	aiHandler := handlers.NewAIHandler(aiService)
 
 	// 学习报告

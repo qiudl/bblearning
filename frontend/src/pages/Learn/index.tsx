@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Card, Row, Col, Collapse, Button, Progress, Tag, Empty } from 'antd';
 import { BookOutlined, PlayCircleOutlined, RightOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -10,11 +10,9 @@ const { Panel } = Collapse;
 const LearnPage: React.FC = () => {
   const navigate = useNavigate();
   const { chapters, setChapters, setCurrentKnowledgePoint } = useAppStore();
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // 模拟加载章节数据
-    setLoading(true);
     setTimeout(() => {
       const mockChapters: Chapter[] = [
         {
@@ -99,7 +97,6 @@ const LearnPage: React.FC = () => {
         },
       ];
       setChapters(mockChapters);
-      setLoading(false);
     }, 500);
   }, [setChapters]);
 

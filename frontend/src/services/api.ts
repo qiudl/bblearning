@@ -15,7 +15,7 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     // 从 localStorage 获取 token
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,15 +31,45 @@ apiClient.interceptors.response.use(
   (response) => {
     return response.data;
   },
-  (error) => {
-    // 处理错误
+  async (error) => {
+    const originalRequest = error.config;
+
+    // 如果是401错误且未重试过，尝试刷新token
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (refreshToken) {
+          const response = await axios.post(
+            `${API_CONFIG.BASE_URL}/auth/refresh`,
+            { refresh_token: refreshToken }
+          );
+
+          const { access_token, refresh_token: newRefreshToken } = response.data.data;
+          localStorage.setItem('access_token', access_token);
+          localStorage.setItem('refresh_token', newRefreshToken);
+
+          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+          return apiClient(originalRequest);
+        }
+      } catch (refreshError) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    // 处理其他错误
     if (error.response) {
       const { status, data } = error.response;
-      
+
       switch (status) {
         case 401:
           message.error('未授权，请重新登录');
-          localStorage.removeItem('token');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
           window.location.href = '/login';
           break;
         case 403:
@@ -59,7 +89,7 @@ apiClient.interceptors.response.use(
     } else {
       message.error('请求配置错误');
     }
-    
+
     return Promise.reject(error);
   }
 );
