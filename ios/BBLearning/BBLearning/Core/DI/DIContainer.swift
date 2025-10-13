@@ -41,10 +41,78 @@ final class DIContainer {
         }.inObjectScope(.container)
 
         // MARK: - Repositories
-        // Will be added in Data layer task
+
+        container.register(AuthRepositoryProtocol.self) { r in
+            AuthRepository(apiClient: r.resolve(APIClient.self)!)
+        }.inObjectScope(.container)
+
+        container.register(KnowledgeRepositoryProtocol.self) { r in
+            KnowledgeRepository(apiClient: r.resolve(APIClient.self)!)
+        }.inObjectScope(.container)
+
+        container.register(PracticeRepositoryProtocol.self) { r in
+            PracticeRepository(apiClient: r.resolve(APIClient.self)!)
+        }.inObjectScope(.container)
+
+        container.register(AIRepositoryProtocol.self) { r in
+            AIRepository(apiClient: r.resolve(APIClient.self)!)
+        }.inObjectScope(.container)
+
+        container.register(WrongQuestionRepositoryProtocol.self) { r in
+            WrongQuestionRepository(apiClient: r.resolve(APIClient.self)!)
+        }.inObjectScope(.container)
+
+        container.register(StatisticsRepositoryProtocol.self) { r in
+            StatisticsRepository(apiClient: r.resolve(APIClient.self)!)
+        }.inObjectScope(.container)
 
         // MARK: - Use Cases
-        // Will be added in Domain layer task
+
+        container.register(LoginUseCase.self) { r in
+            LoginUseCase(
+                authRepository: r.resolve(AuthRepositoryProtocol.self)!,
+                keychainManager: r.resolve(KeychainManager.self)!,
+                userDefaultsManager: r.resolve(UserDefaultsManager.self)!
+            )
+        }
+
+        container.register(RegisterUseCase.self) { r in
+            RegisterUseCase(authRepository: r.resolve(AuthRepositoryProtocol.self)!)
+        }
+
+        container.register(LogoutUseCase.self) { r in
+            LogoutUseCase(
+                authRepository: r.resolve(AuthRepositoryProtocol.self)!,
+                keychainManager: r.resolve(KeychainManager.self)!,
+                realmManager: r.resolve(RealmManager.self)!
+            )
+        }
+
+        container.register(GetKnowledgeTreeUseCase.self) { r in
+            GetKnowledgeTreeUseCase(
+                knowledgeRepository: r.resolve(KnowledgeRepositoryProtocol.self)!,
+                userDefaultsManager: r.resolve(UserDefaultsManager.self)!
+            )
+        }
+
+        container.register(GenerateQuestionsUseCase.self) { r in
+            GenerateQuestionsUseCase(
+                practiceRepository: r.resolve(PracticeRepositoryProtocol.self)!,
+                knowledgeRepository: r.resolve(KnowledgeRepositoryProtocol.self)!
+            )
+        }
+
+        container.register(SubmitAnswerUseCase.self) { r in
+            SubmitAnswerUseCase(
+                practiceRepository: r.resolve(PracticeRepositoryProtocol.self)!,
+                knowledgeRepository: r.resolve(KnowledgeRepositoryProtocol.self)!,
+                wrongQuestionRepository: r.resolve(WrongQuestionRepositoryProtocol.self)!
+            )
+        }
+
+        container.register(ChatWithAIUseCase.self) { r in
+            ChatWithAIUseCase(aiRepository: r.resolve(AIRepositoryProtocol.self)!)
+        }
 
         // MARK: - ViewModels
         // Will be added in Presentation layer tasks

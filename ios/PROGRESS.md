@@ -297,16 +297,107 @@
 
 ---
 
+### Task #2423: iOS-数据层开发(Repositories+API) ✅
+
+**完成时间**: 2025-10-13
+**耗时**: 约2小时（AI开发效率）
+
+#### 完成内容
+
+**DTOs (4个文件, ~600行代码)**:
+
+1. **✅ UserDTO.swift** - 用户数据传输对象
+   - UserDTO, UpdateUserRequestDTO, ChangePasswordRequestDTO
+   - toDomain()映射方法
+
+2. **✅ KnowledgePointDTO.swift** - 知识点数据传输对象
+   - KnowledgePointDTO, LearningProgressDTO, UpdateProgressRequestDTO
+   - 双向映射(from/toDomain)
+
+3. **✅ QuestionDTO.swift** - 题目数据传输对象
+   - QuestionDTO, QuestionContentDTO, AnswerDTO, GenerateQuestionsRequestDTO
+   - toDomain()映射方法
+
+4. **✅ PracticeDTO.swift** - 练习数据传输对象
+   - PracticeRecordDTO, AIGradeDTO, SubmitAnswerRequestDTO, PracticeSessionDTO
+   - toDomain()映射方法
+
+**Repositories (6个文件, ~1200行代码)**:
+
+5. **✅ AuthRepository.swift** - 认证仓储实现
+   - 实现AuthRepositoryProtocol的所有方法
+   - register, login, refreshToken, logout
+   - getCurrentUser, updateUser, changePassword, checkUsernameAvailability
+   - 使用APIClient发送请求，DTO映射
+
+6. **✅ KnowledgeRepository.swift** - 知识点仓储实现
+   - 实现KnowledgeRepositoryProtocol的所有方法
+   - getKnowledgeTree, getKnowledgePoint, getChildren
+   - updateProgress, getProgress, searchKnowledgePoints
+   - getRecommendedKnowledgePoints, getWeakKnowledgePoints, markAsMastered
+
+7. **✅ PracticeRepository.swift** - 练习仓储实现
+   - 实现PracticeRepositoryProtocol的所有方法
+   - generateQuestions, getQuestion, submitAnswer
+   - getPracticeHistory, getPracticeRecord
+   - createPracticeSession, completePracticeSession, getCurrentSession
+   - 分页数据映射
+
+8. **✅ AIRepository.swift** - AI服务仓储实现
+   - 实现AIRepositoryProtocol的所有方法
+   - chat, recognizeQuestion, getChatHistory
+   - getConversations, createConversation, deleteConversation
+   - getDiagnosis, getRecommendations
+   - generateCustomQuestion, gradeAnswer
+   - 包含AIMessageDTO, ChatConversationDTO, RecommendationsDTO等
+
+9. **✅ WrongQuestionRepository.swift** - 错题本仓储实现
+   - 实现WrongQuestionRepositoryProtocol的所有方法
+   - getWrongQuestions, getWrongQuestion, addWrongQuestion, deleteWrongQuestion
+   - updateStatus, recordRetry, markAsMastered
+   - getQuestionsNeedReview, getStatistics
+   - batchMarkAsMastered, archiveOldQuestions
+   - 包含WrongQuestionDTO, ArchiveResponse
+
+10. **✅ StatisticsRepository.swift** - 统计仓储实现
+    - 实现StatisticsRepositoryProtocol的所有方法
+    - getLearningStatistics, getDailyStatistics, getWeeklyStatistics
+    - getMonthlyStatistics, getOverallStatistics
+    - getKnowledgeMastery, getProgressCurve
+    - recordPracticeStats, updateStreak, getLeaderboard
+
+**Realm本地模型 (1个文件, ~300行代码)**:
+
+11. **✅ RealmModels.swift** - Realm数据库模型
+    - UserObject: 用户缓存
+    - KnowledgePointObject: 知识点缓存
+    - QuestionObject: 题目缓存(JSON序列化)
+    - PracticeRecordObject: 练习记录(离线支持)
+    - WrongQuestionObject: 错题缓存
+    - AIMessageObject: 聊天消息缓存
+    - 每个模型包含from()和toDomain()映射方法
+
+**依赖注入配置**:
+
+12. **✅ DIContainer更新** - 注册所有Repository和UseCase
+    - 注册6个Repository(Auth/Knowledge/Practice/AI/WrongQuestion/Statistics)
+    - 注册7个UseCase(Login/Register/Logout/GetKnowledgeTree/GenerateQuestions/SubmitAnswer/ChatWithAI)
+    - 容器单例模式
+    - 自动依赖注入
+
+#### 技术亮点
+
+- ✅ 完整的DTO映射层（API↔Domain）
+- ✅ Combine响应式Repository实现
+- ✅ Realm离线缓存支持
+- ✅ 分页数据映射
+- ✅ JSON序列化存储复杂对象
+- ✅ Swinject依赖注入配置
+- ✅ 类型安全的依赖解析
+
+---
+
 ## 待完成任务
-
-### Task #2423: iOS-数据层开发(Repositories+API)
-预计耗时: 20小时
-
-**计划内容**:
-- [ ] DTO定义和映射
-- [ ] API Service实现
-- [ ] Repository实现
-- [ ] Realm模型定义
 
 ### Task #2424: iOS-用户认证模块(登录注册)
 预计耗时: 20小时
@@ -348,15 +439,16 @@
 
 ## 项目统计
 
-**已完成**: 3/16 任务 (18.75%)
+**已完成**: 4/16 任务 (25%)
 **代码统计**:
 - 配置文件: 15个文件, 1820行
 - 核心层: 14个文件, 2089行
 - 领域层: 20个文件, 3500行
-- **总计**: 49个文件, 7409行代码
+- 数据层: 12个文件, 2100行
+- **总计**: 61个文件, 9509行代码
 
 **预计完成时间**: 8周 (320小时)
-**已用时间**: 6小时
+**已用时间**: 8小时
 
 ---
 
@@ -385,6 +477,6 @@
 
 ---
 
-**更新时间**: 2025-10-13 09:45
-**进度**: 3/16 (18.75%)
-**下一个任务**: Task #2423 数据层开发
+**更新时间**: 2025-10-13 10:30
+**进度**: 4/16 (25%)
+**下一个任务**: Task #2424 用户认证模块
