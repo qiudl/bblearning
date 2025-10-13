@@ -23,7 +23,7 @@ struct MainTabView: View {
 
             // 知识点
             NavigationView {
-                KnowledgeView()
+                KnowledgeTreeView()
             }
             .tabItem {
                 Label("知识点", systemImage: "book.fill")
@@ -70,12 +70,8 @@ struct HomeView: View {
     }
 }
 
-struct KnowledgeView: View {
-    var body: some View {
-        Text("知识点")
-            .navigationTitle("知识点")
-    }
-}
+// KnowledgeView is now replaced by KnowledgeTreeView
+// See Knowledge/KnowledgeTreeView.swift
 
 struct PracticeView: View {
     var body: some View {
