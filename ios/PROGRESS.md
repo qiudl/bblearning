@@ -397,10 +397,104 @@
 
 ---
 
-## 待完成任务
+### Task #2424: iOS-用户认证模块(登录注册) ✅
 
-### Task #2424: iOS-用户认证模块(登录注册)
-预计耗时: 20小时
+**完成时间**: 2025-10-13
+**耗时**: 约1.5小时（AI开发效率）
+
+#### 完成内容
+
+**ViewModels (3个文件, ~350行代码)**:
+
+1. **✅ BaseViewModel.swift** - ViewModel基类
+   - ObservableObject协议
+   - isLoading, errorMessage状态管理
+   - executeTask通用异步任务执行
+   - showError, clearError错误处理
+   - Combine cancellables管理
+
+2. **✅ LoginViewModel.swift** - 登录视图模型
+   - 用户名、密码、记住密码状态
+   - login()登录方法
+   - quickLogin()快速登录（使用已保存密码）
+   - loadSavedCredentials()加载保存的凭证
+   - isLoggedIn检查登录状态
+   - 集成LoginUseCase
+
+3. **✅ RegisterViewModel.swift** - 注册视图模型
+   - 用户名、密码、确认密码、昵称、年级状态
+   - register()注册方法
+   - 用户名可用性实时检查（防抖500ms）
+   - 密码强度实时检测（weak/medium/strong）
+   - isFormValid表单验证
+   - Combine响应式编程
+   - 集成RegisterUseCase
+
+**Views (3个文件, ~400行代码)**:
+
+4. **✅ LoginView.swift** - 登录界面
+   - Logo和应用标题
+   - 用户名、密码输入
+   - 记住密码Toggle
+   - 忘记密码入口
+   - 登录按钮（加载状态）
+   - 注册跳转
+   - 错误提示Alert
+   - 登录成功跳转MainTabView
+
+5. **✅ RegisterView.swift** - 注册界面
+   - 用户名输入+可用性实时验证
+   - 密码输入+强度指示器（3级颜色条）
+   - 确认密码
+   - 昵称输入
+   - 年级选择（Segmented Picker）
+   - 注册按钮（根据表单验证启用/禁用）
+   - Sheet模态展示
+   - 注册成功自动关闭
+
+6. **✅ MainTabView.swift** - 主页Tab导航
+   - 5个Tab: 首页/知识点/练习/AI辅导/我的
+   - NavigationView包装
+   - 占位符View（后续实现）
+
+**Components (2个文件, ~200行代码)**:
+
+7. **✅ CustomTextField.swift** - 自定义文本输入组件
+   - 标题、图标、占位符
+   - 普通/安全输入切换
+   - 眼睛图标显示/隐藏密码
+   - 键盘类型配置
+   - 统一样式（圆角、边框、背景）
+
+8. **✅ CustomButton.swift** - 自定义按钮组件
+   - 加载状态指示器
+   - 启用/禁用状态
+   - 统一样式
+
+**App Entry**:
+
+9. **✅ ContentView.swift** - 应用根视图
+   - AppState状态管理
+   - isLoggedIn判断显示LoginView或MainTabView
+   - checkLoginStatus()检查Token有效性
+   - login(), logout()状态切换
+
+#### 技术亮点
+
+- ✅ MVVM架构模式
+- ✅ Combine响应式编程
+- ✅ SwiftUI声明式UI
+- ✅ 实时表单验证（用户名可用性、密码强度）
+- ✅ 防抖优化（Debounce 500ms）
+- ✅ 统一错误处理
+- ✅ 加载状态UI反馈
+- ✅ 组件化设计
+- ✅ 深色模式支持
+- ✅ 预览支持（SwiftUI Previews）
+
+---
+
+## 待完成任务
 
 ### Task #2425: iOS-知识点学习模块
 预计耗时: 24小时
@@ -439,16 +533,17 @@
 
 ## 项目统计
 
-**已完成**: 4/16 任务 (25%)
+**已完成**: 5/16 任务 (31.25%)
 **代码统计**:
 - 配置文件: 15个文件, 1820行
 - 核心层: 14个文件, 2089行
 - 领域层: 20个文件, 3500行
 - 数据层: 12个文件, 2100行
-- **总计**: 61个文件, 9509行代码
+- 表现层(认证): 9个文件, 950行
+- **总计**: 70个文件, 10459行代码
 
 **预计完成时间**: 8周 (320小时)
-**已用时间**: 8小时
+**已用时间**: 9.5小时
 
 ---
 
@@ -477,6 +572,6 @@
 
 ---
 
-**更新时间**: 2025-10-13 10:30
-**进度**: 4/16 (25%)
-**下一个任务**: Task #2424 用户认证模块
+**更新时间**: 2025-10-13 11:00
+**进度**: 5/16 (31.25%)
+**下一个任务**: Task #2425 知识点学习模块
