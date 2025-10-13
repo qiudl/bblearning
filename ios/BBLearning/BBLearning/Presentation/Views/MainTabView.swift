@@ -31,13 +31,11 @@ struct MainTabView: View {
             .tag(1)
 
             // 练习
-            NavigationView {
-                PracticeView()
-            }
-            .tabItem {
-                Label("练习", systemImage: "pencil")
-            }
-            .tag(2)
+            PracticeView()
+                .tabItem {
+                    Label("练习", systemImage: "pencil")
+                }
+                .tag(2)
 
             // AI辅导
             NavigationView {
@@ -73,12 +71,8 @@ struct HomeView: View {
 // KnowledgeView is now replaced by KnowledgeTreeView
 // See Knowledge/KnowledgeTreeView.swift
 
-struct PracticeView: View {
-    var body: some View {
-        Text("练习")
-            .navigationTitle("练习")
-    }
-}
+// PracticeView is now replaced by Practice/PracticeView.swift
+// See Practice/PracticeView.swift
 
 struct AITutorView: View {
     var body: some View {
