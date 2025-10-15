@@ -25,7 +25,7 @@ enum AppEnvironment {
     var baseURL: String {
         switch self {
         case .development:
-            return "http://localhost:8080/api/v1"
+            return "https://bblearning.joylodging.com/api/v1"
         case .staging:
             return "https://staging-api.bblearning.com/api/v1"
         case .production:
@@ -36,7 +36,7 @@ enum AppEnvironment {
     var wsURL: String {
         switch self {
         case .development:
-            return "ws://localhost:8080/ws"
+            return "wss://bblearning.joylodging.com/ws"
         case .staging:
             return "wss://staging-api.bblearning.com/ws"
         case .production:
