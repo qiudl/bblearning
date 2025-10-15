@@ -1,0 +1,242 @@
+{
+  "project": {
+    "name": "BBLearning Admin System MVP",
+    "path": "/Users/johnqiu/coding/www/projects/bblearning",
+    "taskSystem": {
+      "url": "http://localhost:8081",
+      "projectId": "1"
+    }
+  },
+  "environment": {
+    "proxyScript": "~/proxy.sh local",
+    "preCommands": [
+      "echo '🚀 BBLearning后台管理系统MVP开发启动...'",
+      "echo '📋 任务: #2576 - 后台管理系统MVP'",
+      "git status --short"
+    ]
+  },
+  "worktree": {
+    "enabled": true,
+    "root": "../bblearning-worktrees",
+    "autoCreate": true
+  },
+  "aiExperts": [
+    {
+      "id": "db-expert",
+      "name": "🗄️ 数据库架构专家",
+      "description": "负责数据库设计、迁移脚本、索引优化",
+      "tasks": ["2577"],
+      "branch": "db/admin-tables",
+      "worktreePath": "../bblearning-worktrees/db-migration",
+      "workingDir": "./backend",
+      "specialties": [
+        "PostgreSQL 15+",
+        "GORM迁移",
+        "数据库设计",
+        "索引优化",
+        "外键约束",
+        "审计日志设计"
+      ],
+      "concurrent": 1,
+      "phase": 1,
+      "instructions": [
+        "设计管理员表(admins)、操作日志表(admin_logs)、系统配置表(system_configs)",
+        "设计RBAC权限表(roles, permissions, role_permissions, user_roles)",
+        "为知识点、题目、用户表添加管理相关字段",
+        "创建数据库迁移脚本(migrations/*.sql)",
+        "添加必要的索引和外键约束",
+        "编写种子数据脚本(初始管理员账号)"
+      ],
+      "deliverables": [
+        "backend/migrations/XXX_create_admin_tables.up.sql",
+        "backend/migrations/XXX_create_admin_tables.down.sql",
+        "backend/scripts/seed_admin_data.sql",
+        "数据库设计文档"
+      ]
+    },
+    {
+      "id": "backend-api-expert-1",
+      "name": "🔧 后端API专家1 (知识点+题目)",
+      "description": "负责知识点和题目管理API开发",
+      "tasks": ["2578", "2579"],
+      "branch": "backend/knowledge-question-api",
+      "worktreePath": "../bblearning-worktrees/knowledge-question-api",
+      "workingDir": "./backend",
+      "specialties": [
+        "Golang",
+        "Gin Framework",
+        "GORM",
+        "RESTful API",
+        "JSONB处理",
+        "LaTeX存储"
+      ],
+      "concurrent": 2,
+      "phase": 2,
+      "dependencies": ["db-expert"],
+      "instructions": [
+        "开发知识点CRUD API（树形结构、层级管理、排序）",
+        "实现批量导入导出功能（Excel/JSON）",
+        "开发题目CRUD API（支持LaTeX公式存储）",
+        "实现高级筛选和搜索（按知识点、难度、题型）",
+        "添加题目版本控制功能",
+        "实现管理员权限中间件",
+        "编写单元测试（覆盖率>80%）"
+      ],
+      "deliverables": [
+        "backend/internal/api/admin/knowledge_handler.go",
+        "backend/internal/service/knowledge_admin_service.go",
+        "backend/internal/api/admin/question_handler.go",
+        "backend/internal/service/question_admin_service.go",
+        "backend/internal/api/middleware/admin_auth.go",
+        "单元测试文件"
+      ]
+    },
+    {
+      "id": "backend-api-expert-2",
+      "name": "🔧 后端API专家2 (用户+AI)",
+      "description": "负责用户管理和AI集成开发",
+      "tasks": ["2580", "2584"],
+      "branch": "backend/user-ai-api",
+      "worktreePath": "../bblearning-worktrees/user-ai-api",
+      "workingDir": "./backend",
+      "specialties": [
+        "Golang",
+        "权限控制RBAC",
+        "OpenAI API",
+        "Claude API",
+        "流式响应",
+        "Prompt工程"
+      ],
+      "concurrent": 2,
+      "phase": 2,
+      "dependencies": ["db-expert"],
+      "instructions": [
+        "开发用户管理API（列表、详情、状态管理）",
+        "实现用户学习数据统计和报告生成",
+        "开发角色权限管理API（RBAC）",
+        "集成AI题目生成接口（单题、批量、模板）",
+        "实现题目质量检测和相似检测",
+        "开发知识点自动提取和推荐",
+        "实现AI对话式内容管理助手",
+        "添加流式响应处理"
+      ],
+      "deliverables": [
+        "backend/internal/api/admin/user_handler.go",
+        "backend/internal/service/user_admin_service.go",
+        "backend/internal/api/admin/ai_handler.go",
+        "backend/internal/service/ai_admin_service.go",
+        "backend/internal/service/ai/prompts_admin.go",
+        "backend/internal/pkg/rbac/rbac.go"
+      ]
+    },
+    {
+      "id": "frontend-expert-1",
+      "name": "🎨 前端专家1 (知识点+题目)",
+      "description": "负责知识点和题目管理界面开发",
+      "tasks": ["2581", "2582"],
+      "branch": "frontend/knowledge-question-admin",
+      "worktreePath": "../bblearning-worktrees/knowledge-question-admin",
+      "workingDir": "./frontend",
+      "specialties": [
+        "React 18",
+        "TypeScript",
+        "Ant Design 5",
+        "富文本编辑器",
+        "KaTeX",
+        "拖拽排序"
+      ],
+      "concurrent": 2,
+      "phase": 3,
+      "dependencies": ["backend-api-expert-1"],
+      "instructions": [
+        "开发知识点管理页面（树形展示、拖拽排序）",
+        "实现知识点新增/编辑/删除弹窗",
+        "开发批量导入导出功能（Excel上传下载）",
+        "开发题目管理页面（列表、筛选、分页）",
+        "集成富文本编辑器（支持LaTeX输入和预览）",
+        "开发题目表单（题型、难度、知识点关联）",
+        "实现AI题目生成对话界面",
+        "添加题目预览和答案显示"
+      ],
+      "deliverables": [
+        "frontend/src/pages/Admin/KnowledgeManage.tsx",
+        "frontend/src/components/Admin/KnowledgeTree.tsx",
+        "frontend/src/pages/Admin/QuestionManage.tsx",
+        "frontend/src/components/Admin/QuestionEditor.tsx",
+        "frontend/src/components/Admin/AIQuestionGenerator.tsx",
+        "frontend/src/services/admin/knowledgeService.ts",
+        "frontend/src/services/admin/questionService.ts"
+      ]
+    },
+    {
+      "id": "frontend-expert-2",
+      "name": "🎨 前端专家2 (用户管理)",
+      "description": "负责用户管理界面和数据可视化",
+      "tasks": ["2583"],
+      "branch": "frontend/user-admin",
+      "worktreePath": "../bblearning-worktrees/user-admin",
+      "workingDir": "./frontend",
+      "specialties": [
+        "React 18",
+        "TypeScript",
+        "Ant Design 5",
+        "ECharts 5",
+        "数据可视化",
+        "权限配置"
+      ],
+      "concurrent": 1,
+      "phase": 3,
+      "dependencies": ["backend-api-expert-2"],
+      "instructions": [
+        "开发用户列表页面（搜索、筛选、批量操作）",
+        "开发用户详情页面（基本信息、学习统计、练习记录）",
+        "使用ECharts实现学习数据可视化（学习时长、知识点掌握、准确率）",
+        "实现用户状态管理（启用/禁用）",
+        "开发管理员权限配置界面",
+        "实现角色权限矩阵展示",
+        "添加批量操作确认弹窗"
+      ],
+      "deliverables": [
+        "frontend/src/pages/Admin/UserManage.tsx",
+        "frontend/src/pages/Admin/UserDetail.tsx",
+        "frontend/src/components/Admin/UserStatistics.tsx",
+        "frontend/src/components/Admin/PermissionMatrix.tsx",
+        "frontend/src/services/admin/userService.ts",
+        "frontend/src/hooks/useUserStatistics.ts"
+      ]
+    }
+  ],
+  "workflow": {
+    "phases": [
+      {
+        "phase": 1,
+        "name": "数据库设计",
+        "experts": ["db-expert"],
+        "parallel": false,
+        "description": "数据库表设计和迁移脚本（必须先完成）"
+      },
+      {
+        "phase": 2,
+        "name": "后端API开发",
+        "experts": ["backend-api-expert-1", "backend-api-expert-2"],
+        "parallel": true,
+        "description": "所有后端API并行开发（等待数据库完成）"
+      },
+      {
+        "phase": 3,
+        "name": "前端界面开发",
+        "experts": ["frontend-expert-1", "frontend-expert-2"],
+        "parallel": true,
+        "description": "所有前端页面并行开发（等待对应API完成）"
+      }
+    ]
+  },
+  "metadata": {
+    "created": "2025-10-15",
+    "version": "1.0",
+    "totalExperts": 5,
+    "totalTasks": 8,
+    "estimatedHours": 66,
+    "phases": 3
+  }
+}

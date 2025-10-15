@@ -1,0 +1,178 @@
+{
+  "project": {
+    "name": "BBLearning Admin System MVP",
+    "description": "后台管理系统MVP - AI驱动的内容管理",
+    "baseBranch": "develop",
+    "featureBranch": "feature/admin-system-mvp"
+  },
+  "worktree": {
+    "enabled": true,
+    "root": "../bblearning-worktrees",
+    "basePath": "/Users/johnqiu/coding/www/projects/bblearning-worktrees"
+  },
+  "worktrees": [
+    {
+      "id": "db-migration",
+      "name": "数据库设计与迁移",
+      "branch": "db/admin-tables",
+      "path": "../bblearning-worktrees/db-migration",
+      "taskId": 2577,
+      "phase": 1,
+      "dependencies": [],
+      "workingDir": "./backend",
+      "description": "管理员表、操作日志表、系统配置表、权限表"
+    },
+    {
+      "id": "knowledge-api",
+      "name": "知识点管理API",
+      "branch": "backend/knowledge-api",
+      "path": "../bblearning-worktrees/knowledge-api",
+      "taskId": 2578,
+      "phase": 2,
+      "dependencies": ["db-migration"],
+      "workingDir": "./backend",
+      "description": "知识点CRUD、树形结构、批量导入导出"
+    },
+    {
+      "id": "question-api",
+      "name": "题目管理API",
+      "branch": "backend/question-api",
+      "path": "../bblearning-worktrees/question-api",
+      "taskId": 2579,
+      "phase": 2,
+      "dependencies": ["db-migration"],
+      "workingDir": "./backend",
+      "description": "题目CRUD、LaTeX支持、批量操作、AI生成"
+    },
+    {
+      "id": "user-api",
+      "name": "用户管理API",
+      "branch": "backend/user-api",
+      "path": "../bblearning-worktrees/user-api",
+      "taskId": 2580,
+      "phase": 2,
+      "dependencies": ["db-migration"],
+      "workingDir": "./backend",
+      "description": "用户列表、详情、统计、权限管理"
+    },
+    {
+      "id": "ai-integration",
+      "name": "AI集成",
+      "branch": "backend/ai-integration",
+      "path": "../bblearning-worktrees/ai-integration",
+      "taskId": 2584,
+      "phase": 2,
+      "dependencies": ["db-migration"],
+      "workingDir": "./backend",
+      "description": "AI题目生成、质量检测、相似检测"
+    },
+    {
+      "id": "knowledge-frontend",
+      "name": "知识点前端",
+      "branch": "frontend/knowledge-admin",
+      "path": "../bblearning-worktrees/knowledge-frontend",
+      "taskId": 2581,
+      "phase": 3,
+      "dependencies": ["knowledge-api"],
+      "workingDir": "./frontend",
+      "description": "树形展示、拖拽排序、批量导入导出"
+    },
+    {
+      "id": "question-frontend",
+      "name": "题目前端",
+      "branch": "frontend/question-admin",
+      "path": "../bblearning-worktrees/question-frontend",
+      "taskId": 2582,
+      "phase": 3,
+      "dependencies": ["question-api", "ai-integration"],
+      "workingDir": "./frontend",
+      "description": "题目列表、富文本编辑、LaTeX预览、AI生成"
+    },
+    {
+      "id": "user-frontend",
+      "name": "用户前端",
+      "branch": "frontend/user-admin",
+      "path": "../bblearning-worktrees/user-frontend",
+      "taskId": 2583,
+      "phase": 3,
+      "dependencies": ["user-api"],
+      "workingDir": "./frontend",
+      "description": "用户列表、详情、统计图表、权限配置"
+    }
+  ],
+  "phases": [
+    {
+      "phase": 1,
+      "name": "基础设施",
+      "description": "数据库设计与迁移（串行）",
+      "worktrees": ["db-migration"],
+      "estimatedHours": 4,
+      "parallel": false
+    },
+    {
+      "phase": 2,
+      "name": "后端API开发",
+      "description": "所有后端API并行开发",
+      "worktrees": ["knowledge-api", "question-api", "user-api", "ai-integration"],
+      "estimatedHours": 34,
+      "parallel": true
+    },
+    {
+      "phase": 3,
+      "name": "前端界面开发",
+      "description": "所有前端页面并行开发",
+      "worktrees": ["knowledge-frontend", "question-frontend", "user-frontend"],
+      "estimatedHours": 28,
+      "parallel": true
+    }
+  ],
+  "aiExperts": [
+    {
+      "id": "db-expert",
+      "name": "🗄️ 数据库专家",
+      "phase": 1,
+      "worktrees": ["db-migration"],
+      "specialties": ["PostgreSQL", "数据库设计", "迁移脚本", "索引优化"],
+      "concurrent": 1
+    },
+    {
+      "id": "backend-expert-1",
+      "name": "🔧 后端专家1",
+      "phase": 2,
+      "worktrees": ["knowledge-api", "question-api"],
+      "specialties": ["Golang", "Gin", "GORM", "RESTful API"],
+      "concurrent": 2
+    },
+    {
+      "id": "backend-expert-2",
+      "name": "🔧 后端专家2",
+      "phase": 2,
+      "worktrees": ["user-api", "ai-integration"],
+      "specialties": ["Golang", "权限控制", "AI集成", "OpenAI API"],
+      "concurrent": 2
+    },
+    {
+      "id": "frontend-expert-1",
+      "name": "🎨 前端专家1",
+      "phase": 3,
+      "worktrees": ["knowledge-frontend", "question-frontend"],
+      "specialties": ["React", "TypeScript", "Ant Design", "富文本编辑"],
+      "concurrent": 2
+    },
+    {
+      "id": "frontend-expert-2",
+      "name": "🎨 前端专家2",
+      "phase": 3,
+      "worktrees": ["user-frontend"],
+      "specialties": ["React", "ECharts", "数据可视化"],
+      "concurrent": 1
+    }
+  ],
+  "metadata": {
+    "created": "2025-10-15",
+    "version": "1.0",
+    "totalEstimatedHours": 66,
+    "phases": 3,
+    "worktreeCount": 8
+  }
+}
