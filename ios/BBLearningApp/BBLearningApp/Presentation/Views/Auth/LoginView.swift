@@ -7,12 +7,18 @@
 
 import SwiftUI
 
-struct LoginView: View {
+struct LoginViewWithBiometric: View {
     @StateObject private var viewModel = LoginViewModel()
     @State private var navigateToRegister = false
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
-        NavigationView {
+        let _ = print("🖥️ [LoginView] Rendering with:")
+        let _ = print("   - isBiometricAvailable: \(viewModel.isBiometricAvailable)")
+        let _ = print("   - isBiometricEnabled: \(viewModel.isBiometricEnabled)")
+        let _ = print("   - biometricType: \(viewModel.biometricType)")
+
+        return NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
                     // Logo和标题
@@ -32,6 +38,22 @@ struct LoginView: View {
                             .foregroundColor(.textSecondary)
                     }
                     .padding(.top, 60)
+
+                    // 生物识别快速登录按钮
+                    if viewModel.isBiometricAvailable {
+                        if viewModel.isBiometricEnabled {
+                            // 已启用：显示快速登录按钮
+                            BiometricLoginButton(
+                                biometricType: viewModel.biometricType,
+                                action: viewModel.loginWithBiometric
+                            )
+                            .padding(.top, 20)
+                        } else {
+                            // 未启用：显示提示信息
+                            BiometricPromptView(biometricType: viewModel.biometricType)
+                                .padding(.top, 20)
+                        }
+                    }
 
                     // 登录表单
                     VStack(spacing: 16) {
@@ -94,10 +116,27 @@ struct LoginView: View {
             }
             .background(Color.background.ignoresSafeArea())
             .navigationBarHidden(true)
+            .onAppear {
+                print("🎬 [LoginView] onAppear - 强制刷新生物识别状态")
+                viewModel.refreshBiometricStatus()
+            }
         }
         .errorAlert(error: $viewModel.errorMessage)
-        .fullScreenCover(isPresented: $viewModel.isLoginSuccessful) {
-            MainTabView()
+        .alert("启用生物识别登录", isPresented: $viewModel.showBiometricEnablePrompt) {
+            Button("启用") {
+                viewModel.enableBiometricAuthFromLastLogin()
+            }
+            Button("暂不启用", role: .cancel) {
+                viewModel.showBiometricEnablePrompt = false
+            }
+        } message: {
+            Text(viewModel.biometricTypeDescription)
+        }
+        .onChange(of: viewModel.isLoginSuccessful) { isSuccessful in
+            if isSuccessful {
+                // 通知AppState更新登录状态
+                appState.login()
+            }
         }
         .sheet(isPresented: $navigateToRegister) {
             RegisterView()
@@ -108,7 +147,8 @@ struct LoginView: View {
 #if DEBUG
 struct LoginView_Previews: PreviewProvider {
     static var previews: some View {
-        LoginView()
+        LoginViewWithBiometric()
+            .environmentObject(AppState())
     }
 }
 #endif

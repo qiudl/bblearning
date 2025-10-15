@@ -25,6 +25,7 @@ export const API_ENDPOINTS = {
 
   // AI 问答
   AI_CHAT: '/ai/chat',
+  AI_CHAT_STREAM: '/ai/chat/stream',
   AI_OCR: '/ai/ocr',
 
   // 错题本

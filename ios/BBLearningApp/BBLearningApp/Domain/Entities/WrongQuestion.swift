@@ -21,6 +21,18 @@ struct WrongQuestion: Identifiable, Codable, Equatable {
     let createdAt: Date
     var updatedAt: Date
 
+    // 新增：错误类型分类
+    var errorType: ErrorType?
+
+    // 新增：复习计划
+    var reviewSchedule: ReviewSchedule?
+
+    // 新增：相似题目ID列表
+    var similarQuestionIds: [Int]?
+
+    // 新增：学习笔记
+    var learningNote: String?
+
     enum CodingKeys: String, CodingKey {
         case id
         case userId = "user_id"
@@ -33,6 +45,49 @@ struct WrongQuestion: Identifiable, Codable, Equatable {
         case mastered
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+        case errorType = "error_type"
+        case reviewSchedule = "review_schedule"
+        case similarQuestionIds = "similar_question_ids"
+        case learningNote = "learning_note"
+    }
+
+    /// 错误类型枚举
+    enum ErrorType: String, Codable, CaseIterable {
+        case conceptual = "conceptual"      // 概念不清
+        case calculation = "calculation"    // 计算错误
+        case careless = "careless"          // 粗心大意
+        case method = "method"              // 方法错误
+        case unknown = "unknown"            // 未分类
+
+        var displayName: String {
+            switch self {
+            case .conceptual: return "概念不清"
+            case .calculation: return "计算错误"
+            case .careless: return "粗心大意"
+            case .method: return "方法错误"
+            case .unknown: return "未分类"
+            }
+        }
+
+        var icon: String {
+            switch self {
+            case .conceptual: return "book.closed"
+            case .calculation: return "function"
+            case .careless: return "exclamationmark.triangle"
+            case .method: return "pencil.and.outline"
+            case .unknown: return "questionmark.circle"
+            }
+        }
+
+        var color: String {
+            switch self {
+            case .conceptual: return "purple"
+            case .calculation: return "orange"
+            case .careless: return "yellow"
+            case .method: return "blue"
+            case .unknown: return "gray"
+            }
+        }
     }
 
     /// 错题状态
@@ -83,6 +138,15 @@ struct WrongQuestionStatistics: Codable, Equatable {
     var byDifficulty: [String: Int]      // 按难度统计
     var recentAdded: [WrongQuestion]?    // 最近添加
 
+    // 新增：按错误类型统计
+    var byErrorType: [String: Int]?      // 按错误类型统计
+
+    // 新增：今日待复习数
+    var todayReviewCount: Int?
+
+    // 新增：本周复习完成数
+    var weeklyCompletedCount: Int?
+
     enum CodingKeys: String, CodingKey {
         case totalCount = "total_count"
         case pendingCount = "pending_count"
@@ -91,6 +155,9 @@ struct WrongQuestionStatistics: Codable, Equatable {
         case byKnowledgePoint = "by_knowledge_point"
         case byDifficulty = "by_difficulty"
         case recentAdded = "recent_added"
+        case byErrorType = "by_error_type"
+        case todayReviewCount = "today_review_count"
+        case weeklyCompletedCount = "weekly_completed_count"
     }
 
     /// 待复习比例
@@ -112,13 +179,97 @@ struct WrongQuestionStatistics: Codable, Equatable {
             .prefix(3)
             .map { $0.key }
     }
+
+    /// 最常见的错误类型
+    var mostCommonErrorType: WrongQuestion.ErrorType? {
+        guard let errorTypes = byErrorType else { return nil }
+
+        let sorted = errorTypes.sorted { $0.value > $1.value }
+        guard let topType = sorted.first?.key else { return nil }
+
+        return WrongQuestion.ErrorType(rawValue: topType)
+    }
+
+    /// 复习完成率
+    var reviewCompletionRate: Double {
+        let completedCount = masteredCount + (weeklyCompletedCount ?? 0)
+        let totalNeedReview = pendingCount + reviewingCount + completedCount
+        guard totalNeedReview > 0 else { return 0 }
+        return Double(completedCount) / Double(totalNeedReview)
+    }
 }
 
 // MARK: - Extensions
 
 extension WrongQuestion {
-    /// 是否需要复习（根据遗忘曲线）
+    /// 智能分析错误类型
+    /// - Returns: 分析出的错误类型
+    func analyzeErrorType() -> ErrorType {
+        guard let aiGrade = practiceRecord?.aiGrade else {
+            return .unknown
+        }
+
+        // 分析AI评分中的错误信息
+        let mistakes = aiGrade.mistakes ?? []
+        let suggestions = aiGrade.suggestions ?? []
+        let allText = (mistakes + suggestions).joined(separator: " ")
+
+        // 关键词匹配
+        if allText.contains("概念") || allText.contains("定义") || allText.contains("理解") {
+            return .conceptual
+        } else if allText.contains("计算") || allText.contains("运算") || allText.contains("结果错误") {
+            return .calculation
+        } else if allText.contains("粗心") || allText.contains("符号") || allText.contains("抄写") {
+            return .careless
+        } else if allText.contains("方法") || allText.contains("思路") || allText.contains("步骤") {
+            return .method
+        }
+
+        return .unknown
+    }
+
+    /// 使用ReviewScheduleManager更新复习计划
+    /// - Parameter isCorrect: 本次复习是否正确
+    /// - Returns: 更新后的WrongQuestion
+    func updateReviewSchedule(isCorrect: Bool) -> WrongQuestion {
+        var updated = self
+        let manager = ReviewScheduleManager.shared
+
+        if let schedule = reviewSchedule {
+            // 更新现有复习计划
+            updated.reviewSchedule = manager.recordReview(for: schedule, isCorrect: isCorrect)
+        } else {
+            // 创建新的复习计划
+            updated.reviewSchedule = manager.createNewSchedule()
+        }
+
+        // 更新其他字段
+        updated.lastRetryTime = Date()
+        if isCorrect {
+            updated.retryCount += 1
+            // 连续正确5次视为掌握
+            if updated.retryCount >= 5 {
+                updated.status = .mastered
+                updated.mastered = true
+            }
+        } else {
+            // 错误则重置计数
+            updated.retryCount = 0
+            updated.status = .reviewing
+        }
+        updated.updatedAt = Date()
+
+        return updated
+    }
+
+    /// 是否需要复习（基于ReviewSchedule）
     var needsReview: Bool {
+        // 优先使用ReviewSchedule判断
+        if let schedule = reviewSchedule {
+            return ReviewScheduleManager.shared.needsReview(schedule)
+        }
+
+        // 降级到原有逻辑
         guard let lastRetry = lastRetryTime else {
             return status == .pending
         }
@@ -140,6 +291,12 @@ extension WrongQuestion {
 
     /// 下次复习时间
     var nextReviewTime: Date? {
+        // 优先使用ReviewSchedule
+        if let schedule = reviewSchedule {
+            return schedule.nextReviewDate
+        }
+
+        // 降级到原有逻辑
         guard let lastRetry = lastRetryTime else {
             return Date()  // 立即复习
         }
@@ -154,6 +311,22 @@ extension WrongQuestion {
         }
 
         return lastRetry.addingTimeInterval(reviewInterval)
+    }
+
+    /// 获取复习进度文本描述
+    var reviewProgressText: String {
+        if let schedule = reviewSchedule {
+            let days = ReviewScheduleManager.shared.daysUntilNextReview(schedule)
+            if days < 0 {
+                return "待复习"
+            } else if days == 0 {
+                return "今日复习"
+            } else {
+                return "\(days)天后复习"
+            }
+        }
+
+        return reviewProgress >= 100 ? "已掌握" : "复习中"
     }
 
     /// 复习进度（0-100）
@@ -242,7 +415,11 @@ extension WrongQuestion {
         lastRetryTime: nil,
         mastered: false,
         createdAt: Date(),
-        updatedAt: Date()
+        updatedAt: Date(),
+        errorType: .calculation,
+        reviewSchedule: ReviewScheduleManager.shared.createNewSchedule(),
+        similarQuestionIds: [101, 102, 103],
+        learningNote: "需要加强分数运算的练习"
     )
 
     static let mockReviewing = WrongQuestion(
@@ -256,7 +433,19 @@ extension WrongQuestion {
         lastRetryTime: Date().addingTimeInterval(-2 * 86400),
         mastered: false,
         createdAt: Date().addingTimeInterval(-7 * 86400),
-        updatedAt: Date().addingTimeInterval(-2 * 86400)
+        updatedAt: Date().addingTimeInterval(-2 * 86400),
+        errorType: .conceptual,
+        reviewSchedule: ReviewSchedule(
+            nextReviewDate: Date().addingTimeInterval(2 * 86400),
+            reviewCount: 2,
+            reviewDates: [
+                Date().addingTimeInterval(-7 * 86400),
+                Date().addingTimeInterval(-2 * 86400)
+            ],
+            intervals: [1, 2]
+        ),
+        similarQuestionIds: [201, 202],
+        learningNote: "代数式的概念需要再理解"
     )
 
     static let mockMastered = WrongQuestion(
@@ -266,11 +455,26 @@ extension WrongQuestion {
         question: Question.mockChoice,
         practiceRecord: nil,
         status: .mastered,
-        retryCount: 3,
+        retryCount: 5,
         lastRetryTime: Date().addingTimeInterval(-1 * 86400),
         mastered: true,
         createdAt: Date().addingTimeInterval(-14 * 86400),
-        updatedAt: Date().addingTimeInterval(-1 * 86400)
+        updatedAt: Date().addingTimeInterval(-1 * 86400),
+        errorType: .careless,
+        reviewSchedule: ReviewSchedule(
+            nextReviewDate: Date().addingTimeInterval(15 * 86400),
+            reviewCount: 5,
+            reviewDates: [
+                Date().addingTimeInterval(-14 * 86400),
+                Date().addingTimeInterval(-13 * 86400),
+                Date().addingTimeInterval(-11 * 86400),
+                Date().addingTimeInterval(-7 * 86400),
+                Date().addingTimeInterval(-1 * 86400)
+            ],
+            intervals: [1, 2, 4, 7, 15]
+        ),
+        similarQuestionIds: nil,
+        learningNote: "已掌握，注意细心"
     )
 
     static let mockList: [WrongQuestion] = [mock, mockReviewing, mockMastered]
@@ -294,7 +498,15 @@ extension WrongQuestionStatistics {
                 "medium": 8,
                 "hard": 4
             ],
-            recentAdded: [WrongQuestion.mock]
+            recentAdded: [WrongQuestion.mock],
+            byErrorType: [
+                "calculation": 6,
+                "conceptual": 4,
+                "careless": 3,
+                "method": 2
+            ],
+            todayReviewCount: 3,
+            weeklyCompletedCount: 8
         )
     }
 }

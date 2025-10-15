@@ -5,24 +5,40 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/qiudl/bblearning-backend/internal/api/handlers"
 	"github.com/qiudl/bblearning-backend/internal/api/middleware"
 	"github.com/qiudl/bblearning-backend/internal/pkg/crypto"
 	"github.com/qiudl/bblearning-backend/internal/pkg/database"
+	"github.com/qiudl/bblearning-backend/internal/pkg/logger"
+	"github.com/qiudl/bblearning-backend/internal/pkg/metrics"
 	"github.com/qiudl/bblearning-backend/internal/repository"
 	"github.com/qiudl/bblearning-backend/internal/repository/postgres"
 	"github.com/qiudl/bblearning-backend/internal/service"
 	"github.com/qiudl/bblearning-backend/internal/service/ai"
 	"github.com/qiudl/bblearning-backend/internal/service/analytics"
 	"github.com/qiudl/bblearning-backend/internal/service/knowledge"
+	"github.com/qiudl/bblearning-backend/internal/service/ocr"
 	"github.com/qiudl/bblearning-backend/internal/service/practice"
 	"github.com/qiudl/bblearning-backend/internal/service/user"
 )
 
 // Setup 设置所有路由
 func Setup(r *gin.Engine) {
+	// 请求ID中间件
+	r.Use(middleware.RequestIDMiddleware())
+
+	// Prometheus metrics middleware
+	r.Use(metrics.PrometheusMiddleware())
+
+	// 结构化日志中间件
+	r.Use(middleware.LoggingMiddleware(logger.GetLogger()))
+
 	// CORS middleware
 	r.Use(middleware.CORS())
+
+	// Metrics endpoint (Prometheus格式)
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// 初始化依赖
 	// 用户认证
@@ -62,6 +78,10 @@ func Setup(r *gin.Engine) {
 	conversationRepo := postgres.NewAIConversationRepository(database.DB)
 	aiService := ai.NewAIService(apiKeyService, kpRepo, questionRepo, recordRepo, progressRepo, conversationRepo)
 	aiHandler := handlers.NewAIHandler(aiService)
+
+	// OCR集成
+	ocrService := ocr.NewOCRService(apiKeyService, questionRepo)
+	ocrHandler := handlers.NewOCRHandler(ocrService)
 
 	// 学习报告
 	reportService := analytics.NewReportService(progressRepo, recordRepo, kpRepo, chapterRepo)
@@ -132,8 +152,14 @@ func Setup(r *gin.Engine) {
 			authorized.POST("/ai/generate-question", aiHandler.GenerateQuestion)
 			authorized.POST("/ai/grade", aiHandler.GradeAnswer)
 			authorized.POST("/ai/chat", aiHandler.Chat)
+			authorized.POST("/ai/chat/stream", aiHandler.ChatStream) // SSE流式输出
 			authorized.POST("/ai/diagnose", aiHandler.Diagnose)
 			authorized.POST("/ai/explain", aiHandler.Explain)
+
+			// OCR功能
+			authorized.POST("/ai/ocr", ocrHandler.RecognizeQuestion)
+			authorized.POST("/ai/ocr/formula", ocrHandler.RecognizeFormula)
+			authorized.POST("/ai/ocr/batch", ocrHandler.BatchRecognize)
 
 			// 学习报告
 			authorized.GET("/reports/learning", reportHandler.GetLearningReport)

@@ -31,10 +31,11 @@ func main() {
 	}
 	defer database.Close()
 
-	// 自动迁移数据库
-	if err := database.AutoMigrate(); err != nil {
-		logger.Fatal("Failed to migrate database: " + err.Error())
-	}
+	// 自动迁移数据库 - 暂时禁用，因为已通过SQL migrations创建了表结构
+	// TODO: 修复AutoMigrate与实际schema的差异后再启用
+	// if err := database.AutoMigrate(); err != nil {
+	// 	logger.Fatal("Failed to migrate database: " + err.Error())
+	// }
 
 	// 初始化Redis
 	if err := cache.Init(); err != nil {
@@ -53,8 +54,11 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	// 创建 Gin 引擎
-	r := gin.Default()
+	// 创建 Gin 引擎（使用 New 而不是 Default，因为我们有自定义的日志中间件）
+	r := gin.New()
+
+	// 添加 Recovery 中间件（panic恢复）
+	r.Use(gin.Recovery())
 
 	// 设置路由
 	routes.Setup(r)

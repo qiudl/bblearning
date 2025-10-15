@@ -23,3 +23,36 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
+
+/* 流式输出文本的闪烁光标 */
+.streaming-message {
+  position: relative;
+}
+
+.streaming-message::after {
+  content: '▋';
+  animation: cursor-blink 0.8s infinite;
+  margin-left: 2px;
+  color: #52c41a;
+}
+
+@keyframes cursor-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* 消息淡入动画 */
+.message-fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

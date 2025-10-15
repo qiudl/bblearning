@@ -51,10 +51,10 @@ func (r *PracticeRecordRepository) List(ctx context.Context, filters map[string]
 		query = query.Where("is_correct = ?", isCorrect)
 	}
 	if startDate, ok := filters["start_date"]; ok {
-		query = query.Where("timestamp >= ?", startDate)
+		query = query.Where("created_at >= ?", startDate)
 	}
 	if endDate, ok := filters["end_date"]; ok {
-		query = query.Where("timestamp <= ?", endDate)
+		query = query.Where("created_at <= ?", endDate)
 	}
 	if kpID, ok := filters["knowledge_point_id"]; ok {
 		query = query.Joins("JOIN questions ON questions.id = practice_records.question_id").
@@ -69,7 +69,7 @@ func (r *PracticeRecordRepository) List(ctx context.Context, filters map[string]
 	// 查询列表(预加载Question)
 	err := query.
 		Preload("Question").
-		Order("timestamp DESC").
+		Order("created_at DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&records).Error
@@ -88,7 +88,7 @@ func (r *PracticeRecordRepository) FindByUserAndQuestion(ctx context.Context, us
 	var records []*models.PracticeRecord
 	err := r.db.WithContext(ctx).
 		Where("user_id = ? AND question_id = ?", userID, questionID).
-		Order("timestamp DESC").
+		Order("created_at DESC").
 		Find(&records).Error
 	return records, err
 }
@@ -134,7 +134,7 @@ func (r *PracticeRecordRepository) GetTodayStatistics(ctx context.Context, userI
 	today := time.Now().Format("2006-01-02")
 	err := r.db.WithContext(ctx).
 		Model(&models.PracticeRecord{}).
-		Where("user_id = ? AND DATE(timestamp) = ?", userID, today).
+		Where("user_id = ? AND DATE(created_at) = ?", userID, today).
 		Count(&count).Error
 	return count, err
 }
@@ -145,7 +145,7 @@ func (r *PracticeRecordRepository) GetWeekStatistics(ctx context.Context, userID
 	weekStart := time.Now().AddDate(0, 0, -int(time.Now().Weekday()))
 	err := r.db.WithContext(ctx).
 		Model(&models.PracticeRecord{}).
-		Where("user_id = ? AND timestamp >= ?", userID, weekStart).
+		Where("user_id = ? AND created_at >= ?", userID, weekStart).
 		Count(&count).Error
 	return count, err
 }
@@ -155,7 +155,7 @@ func (r *PracticeRecordRepository) GetLastPracticeTime(ctx context.Context, user
 	var record models.PracticeRecord
 	err := r.db.WithContext(ctx).
 		Where("user_id = ?", userID).
-		Order("timestamp DESC").
+		Order("created_at DESC").
 		First(&record).Error
 
 	if err != nil {
@@ -165,7 +165,7 @@ func (r *PracticeRecordRepository) GetLastPracticeTime(ctx context.Context, user
 		return nil, err
 	}
 
-	return &record.Timestamp, nil
+	return &record.CreatedAt, nil
 }
 
 // GetKnowledgePointAccuracy 获取各知识点正确率
@@ -220,8 +220,8 @@ func (r *PracticeRecordRepository) BatchCreate(ctx context.Context, records []*m
 func (r *PracticeRecordRepository) FindByDateRange(ctx context.Context, userID uint, startDate, endDate time.Time) ([]*models.PracticeRecord, error) {
 	var records []*models.PracticeRecord
 	err := r.db.WithContext(ctx).
-		Where("user_id = ? AND timestamp >= ? AND timestamp <= ?", userID, startDate, endDate).
-		Order("timestamp ASC").
+		Where("user_id = ? AND created_at >= ? AND created_at <= ?", userID, startDate, endDate).
+		Order("created_at ASC").
 		Find(&records).Error
 	return records, err
 }

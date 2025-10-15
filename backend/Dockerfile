@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # 安装必要的构建工具
 RUN apk add --no-cache git make
@@ -38,8 +38,8 @@ WORKDIR /app
 # 复制编译好的二进制文件
 COPY --from=builder /app/bin/server /app/server
 
-# 复制配置文件
-COPY --from=builder /app/config /app/config
+# 复制Docker环境的配置文件
+COPY --from=builder /app/config/config-docker.yaml /app/config/config.yaml
 
 # 复制 wait-for-it 脚本
 COPY wait-for-it.sh /app/wait-for-it.sh
@@ -49,11 +49,11 @@ RUN chmod +x /app/wait-for-it.sh /app/server
 USER appuser
 
 # 暴露端口
-EXPOSE 8080
+EXPOSE 9090
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
+  CMD curl -f http://localhost:9090/health || exit 1
 
 # 启动应用
 CMD ["/app/server"]

@@ -149,13 +149,12 @@ func (s *PracticeService) SubmitAnswer(ctx context.Context, userID uint, req *dt
 	isCorrect := s.checkAnswer(question, req.UserAnswer)
 
 	// 创建练习记录
-	now := time.Now()
 	record := &models.PracticeRecord{
 		UserID:     userID,
 		QuestionID: req.QuestionID,
 		UserAnswer: req.UserAnswer,
 		IsCorrect:  isCorrect,
-		Timestamp:  now,
+		TimeSpent:  0, // TODO: 从前端传入实际用时
 	}
 
 	err = s.recordRepo.Create(ctx, record)
@@ -169,7 +168,7 @@ func (s *PracticeService) SubmitAnswer(ctx context.Context, userID uint, req *dt
 			UserID:        userID,
 			QuestionID:    req.QuestionID,
 			WrongCount:    1,
-			LastWrongTime: now,
+			LastWrongTime: time.Now(),
 		}
 		_ = s.wrongQuestionRepo.Upsert(ctx, wrongQuestion)
 	}
@@ -211,7 +210,6 @@ func (s *PracticeService) BatchSubmitAnswers(ctx context.Context, userID uint, r
 	}
 
 	// 批量创建记录
-	now := time.Now()
 	records := make([]*models.PracticeRecord, 0, len(req.Answers))
 	wrongQuestions := make([]*models.WrongQuestion, 0)
 
@@ -232,7 +230,7 @@ func (s *PracticeService) BatchSubmitAnswers(ctx context.Context, userID uint, r
 			QuestionID: ans.QuestionID,
 			UserAnswer: ans.UserAnswer,
 			IsCorrect:  isCorrect,
-			Timestamp:  now,
+			TimeSpent:  0, // TODO: 从前端传入实际用时
 		}
 		records = append(records, record)
 
@@ -242,7 +240,7 @@ func (s *PracticeService) BatchSubmitAnswers(ctx context.Context, userID uint, r
 				UserID:        userID,
 				QuestionID:    ans.QuestionID,
 				WrongCount:    1,
-				LastWrongTime: now,
+				LastWrongTime: time.Now(),
 			})
 		}
 
@@ -340,7 +338,7 @@ func (s *PracticeService) GetPracticeRecords(ctx context.Context, userID uint, r
 			QuestionID: record.QuestionID,
 			UserAnswer: record.UserAnswer,
 			IsCorrect:  record.IsCorrect,
-			Timestamp:  record.Timestamp.Format(time.RFC3339),
+			Timestamp:  record.CreatedAt.Format(time.RFC3339),
 		}
 
 		if record.Question != nil {

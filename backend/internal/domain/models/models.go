@@ -76,13 +76,16 @@ type Question struct {
 
 // PracticeRecord 练习记录模型
 type PracticeRecord struct {
-	ID         uint      `gorm:"primarykey" json:"id"`
-	UserID     uint      `gorm:"not null;index" json:"userId"`
-	QuestionID uint      `gorm:"not null;index" json:"questionId"`
-	UserAnswer string    `gorm:"type:text" json:"userAnswer"`
-	IsCorrect  bool      `json:"isCorrect"`
-	Timestamp  time.Time `gorm:"autoCreateTime" json:"timestamp"`
-	Question   *Question `gorm:"foreignKey:QuestionID" json:"question,omitempty"`
+	ID         uint           `gorm:"primarykey" json:"id"`
+	UserID     uint           `gorm:"not null;index" json:"userId"`
+	QuestionID uint           `gorm:"not null;index" json:"questionId"`
+	UserAnswer string         `gorm:"type:text" json:"userAnswer"`
+	IsCorrect  bool           `json:"isCorrect"`
+	TimeSpent  int            `gorm:"default:0" json:"timeSpent"` // 做题用时(秒)
+	CreatedAt  time.Time      `json:"createdAt"`
+	UpdatedAt  time.Time      `json:"updatedAt"`
+	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
+	Question   *Question      `gorm:"foreignKey:QuestionID" json:"question,omitempty"`
 }
 
 // WrongQuestion 错题模型

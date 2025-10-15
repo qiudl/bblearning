@@ -272,7 +272,7 @@ func (s *ReportService) getReportSummary(ctx context.Context, userID uint, start
 		if record.IsCorrect {
 			totalCorrect++
 		}
-		dateKey := record.Timestamp.Format("2006-01-02")
+		dateKey := record.CreatedAt.Format("2006-01-02")
 		studyDays[dateKey] = true
 	}
 
@@ -333,10 +333,10 @@ func (s *ReportService) getPracticeAnalysis(ctx context.Context, userID uint, st
 	for _, record := range records {
 		// TODO: 需要join question表获取题型和难度
 		// 暂时使用模拟数据
-		weekday := record.Timestamp.Weekday().String()
+		weekday := record.CreatedAt.Weekday().String()
 		weekdayDistribution[weekday]++
 
-		hour := record.Timestamp.Hour()
+		hour := record.CreatedAt.Hour()
 		hourDistribution[hour]++
 	}
 
@@ -429,7 +429,7 @@ func (s *ReportService) getProgressCurve(ctx context.Context, userID uint, start
 	dailyMap := make(map[string]*dto.ProgressPoint)
 
 	for _, record := range records {
-		dateKey := record.Timestamp.Format("2006-01-02")
+		dateKey := record.CreatedAt.Format("2006-01-02")
 		if _, exists := dailyMap[dateKey]; !exists {
 			dailyMap[dateKey] = &dto.ProgressPoint{
 				Date:          dateKey,
@@ -524,7 +524,7 @@ func (s *ReportService) getWeeklyStatistics(ctx context.Context, userID uint, da
 		if record.IsCorrect {
 			correctCount++
 		}
-		dateKey := record.Timestamp.Format("2006-01-02")
+		dateKey := record.CreatedAt.Format("2006-01-02")
 		studyDays[dateKey] = true
 	}
 
@@ -568,7 +568,7 @@ func (s *ReportService) getMonthlyStatistics(ctx context.Context, userID uint, d
 		if record.IsCorrect {
 			correctCount++
 		}
-		dateKey := record.Timestamp.Format("2006-01-02")
+		dateKey := record.CreatedAt.Format("2006-01-02")
 		studyDays[dateKey] = true
 	}
 
@@ -670,7 +670,7 @@ func (s *ReportService) getRecentActivity(ctx context.Context, userID uint, days
 	// 按日期分组
 	dailyMap := make(map[string]int)
 	for _, record := range records {
-		dateKey := record.Timestamp.Format("2006-01-02")
+		dateKey := record.CreatedAt.Format("2006-01-02")
 		dailyMap[dateKey]++
 	}
 

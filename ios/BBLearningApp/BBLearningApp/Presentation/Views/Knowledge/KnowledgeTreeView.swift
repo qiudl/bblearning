@@ -27,7 +27,7 @@ struct KnowledgeTreeView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.isSearching {
-                SearchResultsList(results: viewModel.searchResults)
+                SearchResultsList(results: viewModel.searchResults, searchKeyword: viewModel.searchText)
             } else {
                 KnowledgeTreeList(knowledgePoints: viewModel.knowledgeTree)
             }
@@ -94,6 +94,7 @@ struct KnowledgeTreeList: View {
 
 struct SearchResultsList: View {
     let results: [KnowledgePoint]
+    let searchKeyword: String
 
     var body: some View {
         if results.isEmpty {
@@ -108,11 +109,55 @@ struct SearchResultsList: View {
         } else {
             List(results) { kp in
                 NavigationLink(destination: KnowledgeDetailView(knowledgePoint: kp)) {
-                    KnowledgePointRow(knowledgePoint: kp)
+                    SearchResultRow(knowledgePoint: kp, searchKeyword: searchKeyword)
                 }
             }
             .listStyle(PlainListStyle())
         }
+    }
+}
+
+// 搜索结果行（带高亮）
+struct SearchResultRow: View {
+    let knowledgePoint: KnowledgePoint
+    let searchKeyword: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // 难度指示器
+            Circle()
+                .fill(Color.forDifficulty(knowledgePoint.difficulty.rawValue))
+                .frame(width: 12, height: 12)
+
+            VStack(alignment: .leading, spacing: 4) {
+                // 使用高亮文本
+                HighlightedText(
+                    text: knowledgePoint.name,
+                    highlight: searchKeyword,
+                    highlightColor: Color.yellow.opacity(0.5),
+                    font: .body
+                )
+
+                if let progress = knowledgePoint.progress {
+                    HStack(spacing: 8) {
+                        ProgressBar(value: progress.masteryLevel)
+                            .frame(height: 4)
+                        Text("\(Int(progress.masteryLevel * 100))%")
+                            .font(.caption)
+                            .foregroundColor(.textSecondary)
+                    }
+                }
+            }
+
+            Spacer()
+
+            if knowledgePoint.hasChildren {
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 

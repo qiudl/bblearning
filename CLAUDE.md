@@ -369,3 +369,4 @@ Use Docker Compose to run all services locally:
 ## Contact
 
 This is a personal learning project. For questions or collaboration, refer to the repository README or project documentation.
+- 不要在本地保存md文件。都用mcp保存到ai-proj任务文档中。本项目id：153

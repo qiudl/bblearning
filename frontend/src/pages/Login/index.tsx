@@ -16,15 +16,20 @@ const LoginPage: React.FC = () => {
   const onLogin = async (values: any) => {
     setLoading(true);
     try {
+      console.log('🔐 开始登录...', values);
       const result = await login({
         username: values.username,
         password: values.password,
       });
 
+      console.log('✅ 登录API返回:', result);
       setAuth(result.user, result.access_token, result.refresh_token);
+      console.log('✅ 状态已更新，准备跳转到 /learn');
       message.success('登录成功！');
       navigate('/learn');
+      console.log('✅ navigate已调用');
     } catch (error: any) {
+      console.error('❌ 登录失败:', error);
       message.error(error.response?.data?.message || '登录失败，请检查用户名和密码');
     } finally {
       setLoading(false);

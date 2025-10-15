@@ -16,6 +16,9 @@ struct User: Identifiable, Codable, Equatable {
     var avatar: String?
     var phone: String?
     var email: String?
+    var gender: Gender?
+    var school: String?
+    var experience: Int
     let createdAt: Date
     var updatedAt: Date
 
@@ -27,8 +30,27 @@ struct User: Identifiable, Codable, Equatable {
         case avatar
         case phone
         case email
+        case gender
+        case school
+        case experience
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+    }
+
+    // MARK: - Gender
+
+    enum Gender: String, Codable, CaseIterable {
+        case male = "male"
+        case female = "female"
+        case other = "other"
+
+        var displayName: String {
+            switch self {
+            case .male: return "男"
+            case .female: return "女"
+            case .other: return "其他"
+            }
+        }
     }
 }
 
@@ -54,6 +76,21 @@ extension User {
     var avatarURL: URL? {
         guard let avatar = avatar else { return nil }
         return URL(string: avatar)
+    }
+
+    /// 当前等级
+    var level: Int {
+        return LevelSystem.levelForExperience(experience)
+    }
+
+    /// 等级信息
+    var levelInfo: LevelInfo {
+        return LevelInfo(totalExperience: experience)
+    }
+
+    /// 等级进度 (0.0-1.0)
+    func levelProgress() -> Double {
+        return LevelSystem.progressForLevel(experience, level: level)
     }
 }
 

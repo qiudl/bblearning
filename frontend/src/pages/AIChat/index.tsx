@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, Input, Button, Avatar, Space, Upload, message } from 'antd';
 import { SendOutlined, CameraOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons';
 import { ChatMessage } from '../../types';
+import { aiService } from '../../services/ai';
 import './index.css';
 
 const { TextArea } = Input;
@@ -17,6 +18,7 @@ const AIChatPage: React.FC = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false); // 是否正在流式输出
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -38,46 +40,155 @@ const AIChatPage: React.FC = () => {
     };
 
     setMessages([...messages, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setLoading(true);
 
-    // 模拟AI回复
-    setTimeout(() => {
-      const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: '让我来帮你理解这个问题。首先，你能告诉我这道题涉及哪个知识点吗？比如是三角形、因式分解还是其他？这样我能更好地引导你思考。',
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
+    // 创建一个临时的 AI 消息用于流式更新
+    const aiMessageId = (Date.now() + 1).toString();
+    const aiMessage: ChatMessage = {
+      id: aiMessageId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, aiMessage]);
+
+    try {
+      // 使用流式 API
+      let accumulatedContent = '';
+      setIsStreaming(true);
+
+      aiService.chatStream(
+        currentInput,
+        undefined,
+        // onChunk: 接收到内容块时更新消息
+        (content: string) => {
+          accumulatedContent += content;
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId
+                ? { ...msg, content: accumulatedContent }
+                : msg
+            )
+          );
+        },
+        // onDone: 流式输出完成
+        (conversationId: number) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId
+                ? { ...msg, id: conversationId.toString() }
+                : msg
+            )
+          );
+          setIsStreaming(false);
+          setLoading(false);
+        },
+        // onError: 发生错误
+        (error: string) => {
+          message.error(error || 'AI服务暂时不可用，请稍后再试');
+          console.error('AI Chat Stream Error:', error);
+
+          // 更新为错误提示消息
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId
+                ? { ...msg, content: '抱歉，我现在无法回答。请稍后再试。' }
+                : msg
+            )
+          );
+          setIsStreaming(false);
+          setLoading(false);
+        }
+      );
+    } catch (error: any) {
+      message.error(error.message || 'AI服务暂时不可用，请稍后再试');
+      console.error('AI Chat Error:', error);
+
+      // 更新为错误提示消息
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === aiMessageId
+            ? { ...msg, content: '抱歉，我现在无法回答。请稍后再试。' }
+            : msg
+        )
+      );
+      setIsStreaming(false);
       setLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleUpload = (file: File) => {
-    message.success('图片上传成功，正在识别...');
-    
-    // 模拟OCR识别
-    setTimeout(() => {
-      const userMessage: ChatMessage = {
-        id: Date.now().toString(),
-        role: 'user',
-        content: '已识别题目：证明三角形ABC中，如果AB=AC，则∠B=∠C',
-        timestamp: new Date().toISOString(),
-        images: [URL.createObjectURL(file)],
-      };
-      setMessages((prev) => [...prev, userMessage]);
+  const handleUpload = async (file: File) => {
+    message.info('图片上传成功，正在识别...');
 
-      setTimeout(() => {
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: '这是一道关于等腰三角形性质的证明题。让我引导你思考：\n\n1. 题目给出的条件是什么？\n2. 等腰三角形有什么特殊性质？\n3. 你觉得应该用哪种方法来证明？\n\n提示：可以考虑作辅助线，比如从A点向BC作垂线。',
-          timestamp: new Date().toISOString(),
+    try {
+      // 将图片转换为Base64
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      await new Promise<void>((resolve, reject) => {
+        reader.onload = async () => {
+          try {
+            const base64 = reader.result as string;
+            const userMessage: ChatMessage = {
+              id: Date.now().toString(),
+              role: 'user',
+              content: '[图片]',
+              timestamp: new Date().toISOString(),
+              images: [base64],
+            };
+            setMessages((prev) => [...prev, userMessage]);
+
+            setLoading(true);
+
+            try {
+              // 调用OCR API识别题目
+              const response = await aiService.recognizeQuestion(base64);
+
+              if (response.code === 0 && response.data) {
+                // OCR识别成功，显示识别结果
+                const recognizedText = response.data.recognized_text;
+                const aiMessage: ChatMessage = {
+                  id: (Date.now() + 1).toString(),
+                  role: 'assistant',
+                  content: `我识别到的题目是：\n\n${recognizedText}\n\n${
+                    response.data.ai_solution
+                      ? `\n答案：${response.data.ai_solution}`
+                      : '请问需要我帮您解答这道题吗？'
+                  }\n\n(识别置信度: ${Math.round(response.data.confidence * 100)}%)`,
+                  timestamp: new Date().toISOString(),
+                };
+                setMessages((prev) => [...prev, aiMessage]);
+                message.success('题目识别成功！');
+              } else {
+                throw new Error(response.message || 'OCR识别失败');
+              }
+            } catch (ocrError: any) {
+              message.error(ocrError.message || 'OCR识别失败，请重试');
+              const errorMessage: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: '抱歉，我无法识别这张图片。请确保图片清晰，或者直接输入您的问题。',
+                timestamp: new Date().toISOString(),
+              };
+              setMessages((prev) => [...prev, errorMessage]);
+            }
+
+            setLoading(false);
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
         };
-        setMessages((prev) => [...prev, aiMessage]);
-      }, 1500);
-    }, 1000);
+
+        reader.onerror = () => reject(new Error('图片读取失败'));
+      });
+    } catch (error: any) {
+      message.error(error.message || '图片上传失败');
+      console.error('Upload Error:', error);
+      setLoading(false);
+    }
 
     return false;
   };
@@ -94,67 +205,74 @@ const AIChatPage: React.FC = () => {
       bodyStyle={{ height: 'calc(100vh - 280px)', display: 'flex', flexDirection: 'column' }}
     >
       <div className="chat-messages" style={{ flex: 1, overflowY: 'auto', marginBottom: 16 }}>
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`message-item ${msg.role}`}
-            style={{
-              display: 'flex',
-              marginBottom: 16,
-              flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-            }}
-          >
-            <Avatar
-              icon={msg.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
-              style={{
-                backgroundColor: msg.role === 'user' ? '#1890ff' : '#52c41a',
-                flexShrink: 0,
-              }}
-            />
+        {messages.map((msg, index) => {
+          // 判断是否是正在流式输出的最后一条AI消息
+          const isLastAIMessage = msg.role === 'assistant' && index === messages.length - 1;
+          const shouldShowCursor = isStreaming && isLastAIMessage;
+
+          return (
             <div
+              key={msg.id}
+              className={`message-item ${msg.role} message-fade-in`}
               style={{
-                maxWidth: '70%',
-                marginLeft: msg.role === 'user' ? 0 : 12,
-                marginRight: msg.role === 'user' ? 12 : 0,
+                display: 'flex',
+                marginBottom: 16,
+                flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
               }}
             >
+              <Avatar
+                icon={msg.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
+                style={{
+                  backgroundColor: msg.role === 'user' ? '#1890ff' : '#52c41a',
+                  flexShrink: 0,
+                }}
+              />
               <div
                 style={{
-                  padding: '12px 16px',
-                  borderRadius: 8,
-                  backgroundColor: msg.role === 'user' ? '#1890ff' : '#f0f0f0',
-                  color: msg.role === 'user' ? '#fff' : '#000',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
+                  maxWidth: '70%',
+                  marginLeft: msg.role === 'user' ? 0 : 12,
+                  marginRight: msg.role === 'user' ? 12 : 0,
                 }}
               >
-                {msg.images && msg.images.length > 0 && (
-                  <div style={{ marginBottom: 8 }}>
-                    {msg.images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt="uploaded"
-                        style={{ maxWidth: '100%', borderRadius: 4 }}
-                      />
-                    ))}
-                  </div>
-                )}
-                {msg.content}
-              </div>
-              <div
-                style={{
-                  fontSize: '12px',
-                  color: '#999',
-                  marginTop: 4,
-                  textAlign: msg.role === 'user' ? 'right' : 'left',
-                }}
-              >
-                {new Date(msg.timestamp).toLocaleTimeString()}
+                <div
+                  className={shouldShowCursor ? 'streaming-message' : ''}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: 8,
+                    backgroundColor: msg.role === 'user' ? '#1890ff' : '#f0f0f0',
+                    color: msg.role === 'user' ? '#fff' : '#000',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {msg.images && msg.images.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      {msg.images.map((img, idx) => (
+                        <img
+                          key={idx}
+                          src={img}
+                          alt="uploaded"
+                          style={{ maxWidth: '100%', borderRadius: 4 }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {msg.content}
+                </div>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: '#999',
+                    marginTop: 4,
+                    textAlign: msg.role === 'user' ? 'right' : 'left',
+                  }}
+                >
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {loading && (
           <div className="message-item assistant" style={{ display: 'flex' }}>
             <Avatar icon={<RobotOutlined />} style={{ backgroundColor: '#52c41a' }} />

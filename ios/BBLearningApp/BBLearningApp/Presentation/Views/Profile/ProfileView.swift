@@ -29,6 +29,15 @@ struct ProfileView: View {
 
             // 设置
             Section("设置") {
+                // 生物识别登录
+                if viewModel.isBiometricAvailable {
+                    BiometricSettingsRow(
+                        isEnabled: $viewModel.isBiometricEnabled,
+                        biometricType: viewModel.biometricType,
+                        onToggle: viewModel.toggleBiometric
+                    )
+                }
+
                 NavigationLink(destination: Text("账号设置")) {
                     Label("账号设置", systemImage: "person.circle")
                 }

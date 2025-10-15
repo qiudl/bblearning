@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -173,4 +175,80 @@ func (h *AIHandler) Explain(c *gin.Context) {
 	}
 
 	SuccessResponse(c, resp)
+}
+
+// ChatStream AI对话流式输出 (SSE)
+// @Summary AI对话流式输出
+// @Description 使用Server-Sent Events实现AI对话的流式输出
+// @Tags AI
+// @Security Bearer
+// @Accept json
+// @Produce text/event-stream
+// @Param request body dto.AIChatRequest true "对话请求"
+// @Success 200 {string} string "event: message / data: {json}"
+// @Failure 400 {object} Response
+// @Failure 401 {object} Response
+// @Failure 500 {object} Response
+// @Router /api/v1/ai/chat/stream [post]
+func (h *AIHandler) ChatStream(c *gin.Context) {
+	// 获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		ErrorResponse(c, http.StatusUnauthorized, 1001, "未授权")
+		return
+	}
+
+	var req dto.AIChatRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ErrorResponse(c, http.StatusBadRequest, 1000, "参数错误: "+err.Error())
+		return
+	}
+
+	// 设置SSE响应头
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("Transfer-Encoding", "chunked")
+	c.Header("X-Accel-Buffering", "no") // 禁用nginx缓冲
+
+	// 创建流式channel
+	streamChan := make(chan ai.StreamChunk, 10)
+
+	// 启动goroutine处理流式输出
+	go func() {
+		if err := h.aiService.ChatStream(c.Request.Context(), userID.(uint), &req, streamChan); err != nil {
+			// 发送错误事件
+			errorData := map[string]interface{}{
+				"error": err.Error(),
+			}
+			errorJSON, _ := json.Marshal(errorData)
+			fmt.Fprintf(c.Writer, "event: error\ndata: %s\n\n", errorJSON)
+			c.Writer.(http.Flusher).Flush()
+		}
+	}()
+
+	// 发送流式数据
+	for chunk := range streamChan {
+		if chunk.Done {
+			// 发送完成事件
+			doneData := map[string]interface{}{
+				"done":            true,
+				"conversation_id": chunk.ConversationID,
+			}
+			doneJSON, _ := json.Marshal(doneData)
+			fmt.Fprintf(c.Writer, "event: done\ndata: %s\n\n", doneJSON)
+		} else {
+			// 发送内容块
+			chunkData := map[string]interface{}{
+				"content": chunk.Content,
+			}
+			chunkJSON, _ := json.Marshal(chunkData)
+			fmt.Fprintf(c.Writer, "event: message\ndata: %s\n\n", chunkJSON)
+		}
+
+		// 立即刷新缓冲区
+		if flusher, ok := c.Writer.(http.Flusher); ok {
+			flusher.Flush()
+		}
+	}
 }

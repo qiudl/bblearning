@@ -1,0 +1,48 @@
+global:
+  scrape_interval: 15s # 每15秒抓取一次指标
+  evaluation_interval: 15s # 每15秒评估一次告警规则
+  external_labels:
+    cluster: 'bblearning'
+    env: 'dev'
+
+# 告警管理器配置（可选）
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - 'alertmanager:9093'
+
+# 加载告警规则
+rule_files:
+  - 'alerts.yml'
+
+# 抓取配置
+scrape_configs:
+  # BBLearning 后端服务
+  - job_name: 'bblearning-backend'
+    static_configs:
+      - targets: ['backend:8080']  # Docker Compose服务名
+        labels:
+          service: 'backend'
+          component: 'api'
+
+  # Prometheus 自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Redis监控（可选，需要redis_exporter）
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # PostgreSQL监控（可选，需要postgres_exporter）
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance

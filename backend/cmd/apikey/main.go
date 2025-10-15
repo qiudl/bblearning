@@ -10,6 +10,7 @@ import (
 	"github.com/qiudl/bblearning-backend/internal/domain"
 	"github.com/qiudl/bblearning-backend/internal/pkg/crypto"
 	"github.com/qiudl/bblearning-backend/internal/pkg/database"
+	"github.com/qiudl/bblearning-backend/internal/pkg/logger"
 	"github.com/qiudl/bblearning-backend/internal/repository"
 	"github.com/qiudl/bblearning-backend/internal/service"
 	"github.com/spf13/viper"
@@ -26,6 +27,11 @@ func main() {
 	priority := flag.Int("priority", 100, "优先级")
 
 	flag.Parse()
+
+	// 初始化日志
+	if err := logger.Init(); err != nil {
+		log.Fatalf("初始化日志失败: %v", err)
+	}
 
 	// 加载配置
 	if err := loadEnv(); err != nil {

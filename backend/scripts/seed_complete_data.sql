@@ -4,7 +4,7 @@
 -- ============================================
 
 -- 清理现有数据
-TRUNCATE TABLE practice_records, wrong_questions, learning_progress, questions, knowledge_points, chapters, users RESTART IDENTITY CASCADE;
+TRUNCATE TABLE practice_records, wrong_questions, learning_progresses, questions, knowledge_points, chapters, users RESTART IDENTITY CASCADE;
 
 -- ============================================
 -- 1. 章节数据 (7-9年级)
@@ -124,154 +124,154 @@ INSERT INTO knowledge_points (chapter_id, parent_id, name, content, type, diffic
 -- ============================================
 
 -- 有理数题目
-INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty, source) VALUES
+INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty) VALUES
 (1, 'choice', '下列各数中，属于有理数的是（　）',
  '["A. √2", "B. π", "C. -3/4", "D. √5"]',
  'C',
  '有理数包括整数和分数。A、B、D选项都是无理数，只有C选项-3/4是分数，属于有理数。',
- 'basic', '基础练习'),
+ 'basic'),
 
 (5, 'choice', '|-5|的值等于（　）',
  '["A. 5", "B. -5", "C. 1/5", "D. -1/5"]',
  'A',
  '负数的绝对值等于它的相反数，所以|-5| = 5。',
- 'basic', '基础练习'),
+ 'basic'),
 
 (6, 'choice', '计算：(-8) + 13 =（　）',
  '["A. -21", "B. -5", "C. 5", "D. 21"]',
  'C',
  '异号两数相加，取绝对值较大的加数的符号，用较大的绝对值减去较小的绝对值：13 - 8 = 5。',
- 'medium', '基础练习'),
+ 'medium'),
 
 (8, 'choice', '计算：(-3) × (-4) =（　）',
  '["A. -12", "B. 12", "C. -7", "D. 7"]',
  'B',
  '两个负数相乘，同号得正：(-3) × (-4) = 12。',
- 'medium', '基础练习'),
+ 'medium'),
 
 (10, 'choice', '计算：(-2)³ =（　）',
  '["A. -8", "B. 8", "C. -6", "D. 6"]',
  'A',
  '负数的奇次幂是负数：(-2)³ = (-2) × (-2) × (-2) = -8。',
- 'medium', '基础练习');
+ 'medium');
 
 -- 整式的加减题目
-INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty, source) VALUES
+INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty) VALUES
 (11, 'choice', '下列各式中，是单项式的是（　）',
  '["A. x + y", "B. 2xy", "C. x/y", "D. x² - 1"]',
  'B',
  '单项式是数字与字母的乘积。A是多项式，C是分式，D是多项式，只有B是单项式。',
- 'basic', '基础练习'),
+ 'basic'),
 
 (13, 'choice', '下列各组中，是同类项的是（　）',
  '["A. 2x²y和2xy²", "B. 3ab和3abc", "C. -5x²y和2yx²", "D. 4和4x"]',
  'C',
  '同类项要求所含字母相同，并且相同字母的指数也相同。-5x²y和2yx²满足这个条件（字母顺序可以不同）。',
- 'medium', '基础练习'),
+ 'medium'),
 
 (14, 'fill', '合并同类项：3x² - 5x² + 2x² = ______',
  NULL,
  '0',
  '把同类项的系数相加：3 - 5 + 2 = 0，所以结果是0。',
- 'medium', '基础练习'),
+ 'medium'),
 
 (15, 'choice', '化简：-(2x - 3y) =（　）',
  '["A. -2x + 3y", "B. -2x - 3y", "C. 2x - 3y", "D. 2x + 3y"]',
  'A',
  '括号前是负号，去括号后各项都要变号：-(2x - 3y) = -2x + 3y。',
- 'medium', '基础练习');
+ 'medium');
 
 -- 一元一次方程题目
-INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty, source) VALUES
+INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty) VALUES
 (18, 'choice', '下列方程中，是一元一次方程的是（　）',
  '["A. x² + 2x = 0", "B. 2x - y = 3", "C. 3x + 1 = 2x - 5", "D. 1/x = 2"]',
  'C',
  '一元一次方程要满足：只含一个未知数，未知数次数是1，等号两边都是整式。只有C满足所有条件。',
- 'basic', '基础练习'),
+ 'basic'),
 
 (21, 'fill', '解方程：2x + 5 = 13，得 x = ______',
  NULL,
  '4',
  '移项得：2x = 13 - 5，即 2x = 8，系数化为1得：x = 4。',
- 'medium', '基础练习'),
+ 'medium'),
 
 (22, 'answer', '某数的3倍加上5等于这个数的2倍减去1，求这个数。',
  NULL,
  '-6',
  '设这个数为x，根据题意列方程：3x + 5 = 2x - 1，解得：x = -6。',
- 'advanced', '基础练习');
+ 'advanced');
 
 -- 三角形题目
-INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty, source) VALUES
-(33, 'choice', '三角形的两个内角分别为50°和60°，则第三个内角为（　）',
+INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty) VALUES
+(23, 'choice', '三角形的两个内角分别为50°和60°，则第三个内角为（　）',
  '["A. 60°", "B. 70°", "C. 80°", "D. 90°"]',
  'B',
  '根据三角形内角和定理：180° - 50° - 60° = 70°。',
- 'basic', '基础练习'),
+ 'basic'),
 
-(35, 'choice', '已知三角形的两边长分别为3cm和8cm，则第三边长x的取值范围是（　）',
+(24, 'choice', '已知三角形的两边长分别为3cm和8cm，则第三边长x的取值范围是（　）',
  '["A. 3 < x < 8", "B. 5 < x < 11", "C. x > 5", "D. x < 11"]',
  'B',
  '根据三角形三边关系：两边之差 < 第三边 < 两边之和，即 8-3 < x < 8+3，得 5 < x < 11。',
- 'medium', '基础练习'),
+ 'medium'),
 
-(36, 'choice', '等腰三角形的定义是（　）',
+(25, 'choice', '等腰三角形的定义是（　）',
  '["A. 三边相等的三角形", "B. 两边相等的三角形", "C. 三角相等的三角形", "D. 两角相等的三角形"]',
  'B',
  '等腰三角形是指有两条边相等的三角形。',
- 'basic', '基础练习');
+ 'basic');
 
 -- 整式的乘除与因式分解题目
-INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty, source) VALUES
-(45, 'choice', '计算：a³ · a⁵ =（　）',
+INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty) VALUES
+(30, 'choice', '计算：a³ · a⁵ =（　）',
  '["A. a⁸", "B. a¹⁵", "C. a²", "D. 2a⁸"]',
  'A',
  '同底数幂相乘，底数不变，指数相加：a³ · a⁵ = a^(3+5) = a⁸。',
- 'basic', '基础练习'),
+ 'basic'),
 
-(46, 'choice', '计算：(x²)⁴ =（　）',
+(31, 'choice', '计算：(x²)⁴ =（　）',
  '["A. x⁶", "B. x⁸", "C. x²", "D. x¹⁶"]',
  'B',
  '幂的乘方，底数不变，指数相乘：(x²)⁴ = x^(2×4) = x⁸。',
- 'basic', '基础练习'),
+ 'basic'),
 
-(50, 'choice', '计算：(x+3)(x-3) =（　）',
+(35, 'choice', '计算：(x+3)(x-3) =（　）',
  '["A. x² - 9", "B. x² + 9", "C. x² - 6x + 9", "D. x² + 6x - 9"]',
  'A',
  '利用平方差公式：(a+b)(a-b) = a² - b²，所以 (x+3)(x-3) = x² - 9。',
- 'medium', '基础练习'),
+ 'medium'),
 
-(51, 'choice', '计算：(x+2)² =（　）',
+(36, 'choice', '计算：(x+2)² =（　）',
  '["A. x² + 4", "B. x² + 2x + 4", "C. x² + 4x + 4", "D. x² - 4x + 4"]',
  'C',
  '利用完全平方公式：(a+b)² = a² + 2ab + b²，所以 (x+2)² = x² + 4x + 4。',
- 'medium', '基础练习'),
+ 'medium'),
 
-(53, 'fill', '提公因式分解：3x² - 6x = ______',
+(38, 'fill', '提公因式分解：3x² - 6x = ______',
  NULL,
  '3x(x - 2)',
  '公因式是3x，提出公因式：3x² - 6x = 3x(x - 2)。',
- 'medium', '基础练习');
+ 'medium');
 
 -- 一元二次方程题目
-INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty, source) VALUES
-(55, 'choice', '下列方程中，是一元二次方程的是（　）',
+INSERT INTO questions (knowledge_point_id, type, content, options, answer, analysis, difficulty) VALUES
+(40, 'choice', '下列方程中，是一元二次方程的是（　）',
  '["A. x + 2y = 3", "B. x² = 0", "C. x³ - x = 0", "D. 1/x² + x = 1"]',
  'B',
  '一元二次方程的定义：只含一个未知数，未知数的最高次数是2，是整式方程。只有B满足条件。',
- 'basic', '基础练习'),
+ 'basic'),
 
-(58, 'fill', '用公式法解方程：x² - 3x + 2 = 0，得 x₁ = ______, x₂ = ______',
+(43, 'fill', '用公式法解方程：x² - 3x + 2 = 0，得 x₁ = ______, x₂ = ______',
  NULL,
  'x₁ = 1, x₂ = 2',
  '这里 a=1, b=-3, c=2。判别式 Δ = b² - 4ac = 9 - 8 = 1 > 0。\n用公式：x = [3 ± √1] / 2 = [3 ± 1] / 2，得 x₁ = 2, x₂ = 1。',
- 'advanced', '基础练习'),
+ 'advanced'),
 
-(60, 'choice', '方程 x² - 4x + 4 = 0 根的判别式 Δ =（　）',
+(45, 'choice', '方程 x² - 4x + 4 = 0 根的判别式 Δ =（　）',
  '["A. 0", "B. 4", "C. 8", "D. 16"]',
  'A',
  'Δ = b² - 4ac = (-4)² - 4×1×4 = 16 - 16 = 0，说明方程有两个相等的实数根。',
- 'advanced', '基础练习');
+ 'advanced');
 
 -- ============================================
 -- 4. 示例用户数据
@@ -279,7 +279,7 @@ INSERT INTO questions (knowledge_point_id, type, content, options, answer, analy
 
 -- 创建测试用户 (密码都是 "123456")
 -- 使用 bcrypt 生成的哈希值: $2a$10$qWHWs.Ftc7yL4tG6ByvXTODjdV5hQacN7SaxCIW8MQWKKfwtjW7m6
-INSERT INTO users (username, password, nickname, email, phone, grade, avatar, role, created_at, updated_at) VALUES
+INSERT INTO users (username, password, nickname, email, phone_number, grade, avatar, role, created_at, updated_at) VALUES
 ('student01', '$2a$10$qWHWs.Ftc7yL4tG6ByvXTODjdV5hQacN7SaxCIW8MQWKKfwtjW7m6', '张三', 'zhangsan@example.com', '13800138001', '7', NULL, 'student', NOW(), NOW()),
 ('student02', '$2a$10$qWHWs.Ftc7yL4tG6ByvXTODjdV5hQacN7SaxCIW8MQWKKfwtjW7m6', '李四', 'lisi@example.com', '13800138002', '8', NULL, 'student', NOW(), NOW()),
 ('student03', '$2a$10$qWHWs.Ftc7yL4tG6ByvXTODjdV5hQacN7SaxCIW8MQWKKfwtjW7m6', '王五', 'wangwu@example.com', '13800138003', '9', NULL, 'student', NOW(), NOW()),
@@ -290,7 +290,7 @@ INSERT INTO users (username, password, nickname, email, phone, grade, avatar, ro
 -- ============================================
 
 -- 为 student01 创建一些学习进度
-INSERT INTO learning_progress (user_id, knowledge_point_id, mastery_level, practice_count, correct_count, last_practice_at, created_at, updated_at) VALUES
+INSERT INTO learning_progresses (user_id, knowledge_point_id, mastery_level, practice_count, correct_count, last_practice_at, created_at, updated_at) VALUES
 (1, 1, 0.85, 10, 9, NOW() - INTERVAL '1 day', NOW() - INTERVAL '7 days', NOW() - INTERVAL '1 day'),
 (1, 2, 0.75, 8, 6, NOW() - INTERVAL '2 days', NOW() - INTERVAL '6 days', NOW() - INTERVAL '2 days'),
 (1, 3, 0.90, 12, 11, NOW() - INTERVAL '1 day', NOW() - INTERVAL '5 days', NOW() - INTERVAL '1 day'),
@@ -316,9 +316,9 @@ INSERT INTO practice_records (user_id, question_id, user_answer, is_correct, tim
 -- ============================================
 
 -- 基于练习记录创建错题
-INSERT INTO wrong_questions (user_id, question_id, wrong_count, last_wrong_at, status, error_reason, created_at, updated_at) VALUES
-(1, 4, 1, NOW() - INTERVAL '2 days', 'pending', '对绝对值的概念理解不够深刻', NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'),
-(1, 7, 1, NOW() - INTERVAL '3 days', 'pending', '去括号时符号变化规则掌握不牢', NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days');
+INSERT INTO wrong_questions (user_id, question_id, wrong_count, last_wrong_answer, review_count, is_mastered, created_at, updated_at) VALUES
+(1, 4, 1, 'A', 0, FALSE, NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'),
+(1, 7, 1, 'C', 0, FALSE, NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days');
 
 -- ============================================
 -- 完成
@@ -330,6 +330,6 @@ SELECT
     (SELECT COUNT(*) FROM knowledge_points) as knowledge_point_count,
     (SELECT COUNT(*) FROM questions) as question_count,
     (SELECT COUNT(*) FROM users) as user_count,
-    (SELECT COUNT(*) FROM learning_progress) as learning_progress_count,
+    (SELECT COUNT(*) FROM learning_progresses) as learning_progress_count,
     (SELECT COUNT(*) FROM practice_records) as practice_record_count,
     (SELECT COUNT(*) FROM wrong_questions) as wrong_question_count;

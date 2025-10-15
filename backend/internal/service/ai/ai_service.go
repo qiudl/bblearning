@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/qiudl/bblearning-backend/internal/domain/dto"
@@ -509,4 +511,126 @@ func (s *AIService) serializeOptions(options []string) string {
 	}
 	data, _ := json.Marshal(options)
 	return string(data)
+}
+
+// StreamChunk SSE流式输出的数据块
+type StreamChunk struct {
+	Content        string `json:"content"`
+	Done           bool   `json:"done"`
+	ConversationID uint   `json:"conversation_id,omitempty"`
+}
+
+// ChatStream AI对话流式输出
+func (s *AIService) ChatStream(ctx context.Context, userID uint, req *dto.AIChatRequest, streamChan chan<- StreamChunk) error {
+	defer close(streamChan)
+
+	// 获取历史对话
+	conversations, err := s.conversationRepo.FindRecentByUserID(ctx, userID, 10)
+	if err != nil {
+		conversations = []*models.AIConversation{}
+	}
+
+	// 构建对话历史
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "你是一位耐心的数学辅导老师,擅长用简单易懂的方式解释数学概念。",
+		},
+	}
+
+	for _, conv := range conversations {
+		messages = append(messages, openai.ChatCompletionMessage{
+			Role:    conv.Role,
+			Content: conv.Content,
+		})
+	}
+
+	messages = append(messages, openai.ChatCompletionMessage{
+		Role:    openai.ChatMessageRoleUser,
+		Content: req.Message,
+	})
+
+	// 获取AI客户端
+	client, err := s.getClient(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get AI client: %w", err)
+	}
+
+	// 创建流式请求
+	stream, err := client.CreateChatCompletionStream(ctx, openai.ChatCompletionRequest{
+		Model:       s.model,
+		Messages:    messages,
+		Temperature: 0.7,
+		Stream:      true,
+	})
+
+	if err != nil {
+		return fmt.Errorf("AI stream API error: %w", err)
+	}
+	defer stream.Close()
+
+	// 累积完整回复
+	var fullReply strings.Builder
+
+	// 逐块发送流式数据
+	for {
+		response, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			// 流结束
+			break
+		}
+
+		if err != nil {
+			return fmt.Errorf("stream error: %w", err)
+		}
+
+		if len(response.Choices) > 0 {
+			content := response.Choices[0].Delta.Content
+			if content != "" {
+				fullReply.WriteString(content)
+
+				// 发送流式数据块
+				select {
+				case streamChan <- StreamChunk{
+					Content: content,
+					Done:    false,
+				}:
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
+		}
+	}
+
+	// 保存对话记录
+	reply := fullReply.String()
+
+	userConv := &models.AIConversation{
+		UserID:     userID,
+		QuestionID: req.QuestionID,
+		Role:       openai.ChatMessageRoleUser,
+		Content:    req.Message,
+	}
+	_ = s.conversationRepo.Create(ctx, userConv)
+
+	assistantConv := &models.AIConversation{
+		UserID:     userID,
+		QuestionID: req.QuestionID,
+		Role:       openai.ChatMessageRoleAssistant,
+		Content:    reply,
+	}
+	_ = s.conversationRepo.Create(ctx, assistantConv)
+
+	// 发送完成信号
+	select {
+	case streamChan <- StreamChunk{
+		Content:        "",
+		Done:           true,
+		ConversationID: assistantConv.ID,
+	}:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+
+	return nil
 }

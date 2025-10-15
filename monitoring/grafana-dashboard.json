@@ -1,0 +1,87 @@
+{
+  "dashboard": {
+    "title": "BBLearning 监控面板",
+    "tags": ["bblearning", "backend", "monitoring"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "HTTP请求速率",
+        "targets": [
+          {
+            "expr": "rate(bblearning_http_requests_total[5m])",
+            "legendFormat": "{{method}} {{endpoint}} - {{status}}"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "HTTP请求延迟 (P95)",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(bblearning_http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{method}} {{endpoint}}"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "错误率",
+        "targets": [
+          {
+            "expr": "rate(bblearning_http_requests_total{status=~\"5..\"}[5m]) / rate(bblearning_http_requests_total[5m])",
+            "legendFormat": "5xx错误率"
+          },
+          {
+            "expr": "rate(bblearning_http_requests_total{status=~\"4..\"}[5m]) / rate(bblearning_http_requests_total[5m])",
+            "legendFormat": "4xx错误率"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "活跃连接数",
+        "targets": [
+          {
+            "expr": "bblearning_http_active_connections",
+            "legendFormat": "活跃连接"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "AI API调用延迟",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(bblearning_ai_api_call_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{provider}} {{model}} - P95"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "数据库查询延迟",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(bblearning_db_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{operation}} {{table}} - P95"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "用户活动",
+        "targets": [
+          {
+            "expr": "rate(bblearning_user_logins_total[5m])",
+            "legendFormat": "登录 - {{status}}"
+          },
+          {
+            "expr": "rate(bblearning_practice_submissions_total[5m])",
+            "legendFormat": "练习提交"
+          }
+        ],
+        "type": "graph"
+      }
+    ]
+  }
+}

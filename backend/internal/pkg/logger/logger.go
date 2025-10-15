@@ -27,6 +27,11 @@ func Init() error {
 	return nil
 }
 
+// GetLogger returns the logger instance
+func GetLogger() *zap.Logger {
+	return log
+}
+
 // Debug logs a debug message
 func Debug(msg string, fields ...zap.Field) {
 	log.Debug(msg, fields...)

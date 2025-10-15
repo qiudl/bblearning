@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: bblearning_dev
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
@@ -29,7 +29,7 @@ services:
     container_name: bblearning-redis
     command: redis-server --appendonly yes
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -68,7 +68,7 @@ services:
       dockerfile: Dockerfile
     container_name: bblearning-backend
     environment:
-      - SERVER_PORT=8080
+      - SERVER_PORT=9090
       - SERVER_MODE=debug
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -79,6 +79,7 @@ services:
       - REDIS_PORT=6379
       - JWT_SECRET=dev-secret-key-change-in-production
       - JWT_EXPIRATION=3600
+      - ENCRYPTION_MASTER_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin123
@@ -87,10 +88,10 @@ services:
       - AI_API_KEY=${OPENAI_API_KEY:-}
       - AI_MODEL=gpt-4
     ports:
-      - "8080:8080"
-    volumes:
-      - ./backend:/app
-      - /app/bin
+      - "9090:9090"
+    # volumes:
+    #   - ./backend:/app
+    #   - /app/bin
     depends_on:
       postgres:
         condition: service_healthy
@@ -100,7 +101,7 @@ services:
         condition: service_healthy
     networks:
       - bblearning-network
-    command: ["./wait-for-it.sh", "postgres:5432", "--", "make", "run"]
+    command: ["/app/server"]
 
   # 前端服务
   frontend:

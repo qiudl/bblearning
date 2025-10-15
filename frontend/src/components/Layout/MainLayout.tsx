@@ -12,6 +12,7 @@ import {
   MenuUnfoldOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useAuthStore } from '../../store/auth';
 import { useAppStore } from '../../store';
 import type { MenuProps } from 'antd';
 import './MainLayout.css';
@@ -21,7 +22,8 @@ const { Header, Sider, Content } = Layout;
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, sidebarCollapsed, toggleSidebar } = useAppStore();
+  const { user, clearAuth } = useAuthStore();
+  const { sidebarCollapsed, toggleSidebar } = useAppStore();
 
   // 菜单项
   const menuItems: MenuProps['items'] = [
@@ -73,7 +75,7 @@ const MainLayout: React.FC = () => {
       icon: <LogoutOutlined />,
       label: '退出登录',
       onClick: () => {
-        logout();
+        clearAuth();
         navigate('/login');
       },
     },

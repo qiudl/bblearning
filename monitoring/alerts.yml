@@ -1,0 +1,138 @@
+groups:
+  - name: bblearning_alerts
+    interval: 30s
+    rules:
+      # 高错误率告警
+      - alert: HighErrorRate
+        expr: |
+          rate(bblearning_http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "高错误率检测到 (实例 {{ $labels.instance }})"
+          description: "过去5分钟内5xx错误率超过5% (当前值: {{ $value | humanizePercentage }})"
+
+      # 慢请求告警
+      - alert: SlowRequests
+        expr: |
+          histogram_quantile(0.99, rate(bblearning_http_request_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "慢请求检测到 (实例 {{ $labels.instance }})"
+          description: "99分位延迟超过5秒 (当前值: {{ $value }}s)"
+
+      # 服务宕机告警
+      - alert: ServiceDown
+        expr: up{job="bblearning-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "服务宕机 (实例 {{ $labels.instance }})"
+          description: "BBLearning后端服务已宕机超过1分钟"
+
+      # AI API高延迟告警
+      - alert: HighAIAPILatency
+        expr: |
+          histogram_quantile(0.95, rate(bblearning_ai_api_call_duration_seconds_bucket[5m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+          component: ai
+        annotations:
+          summary: "AI API高延迟 (实例 {{ $labels.instance }})"
+          description: "AI API调用95分位延迟超过30秒 (当前值: {{ $value }}s)"
+
+      # AI API失败率高告警
+      - alert: HighAIAPIFailureRate
+        expr: |
+          rate(bblearning_ai_api_calls_total{status!="success"}[5m]) / rate(bblearning_ai_api_calls_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: backend
+          component: ai
+        annotations:
+          summary: "AI API高失败率 (实例 {{ $labels.instance }})"
+          description: "AI API失败率超过10% (当前值: {{ $value | humanizePercentage }})"
+
+      # 数据库慢查询告警
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.95, rate(bblearning_db_query_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+          component: database
+        annotations:
+          summary: "数据库慢查询 (实例 {{ $labels.instance }})"
+          description: "数据库查询95分位延迟超过1秒 (当前值: {{ $value }}s)"
+
+      # Redis高延迟告警
+      - alert: HighRedisLatency
+        expr: |
+          histogram_quantile(0.95, rate(bblearning_redis_ops_duration_seconds_bucket[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+          component: redis
+        annotations:
+          summary: "Redis高延迟 (实例 {{ $labels.instance }})"
+          description: "Redis操作95分位延迟超过100ms (当前值: {{ $value }}s)"
+
+      # 高并发告警
+      - alert: HighConcurrency
+        expr: bblearning_http_active_connections > 1000
+        for: 2m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "高并发连接 (实例 {{ $labels.instance }})"
+          description: "活跃HTTP连接数超过1000 (当前值: {{ $value }})"
+
+      # 用户登录失败率高
+      - alert: HighLoginFailureRate
+        expr: |
+          rate(bblearning_user_logins_total{status="failure"}[5m]) / rate(bblearning_user_logins_total[5m]) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+          component: auth
+        annotations:
+          summary: "用户登录失败率高 (实例 {{ $labels.instance }})"
+          description: "过去5分钟登录失败率超过30% (当前值: {{ $value | humanizePercentage }})"
+
+      # 磁盘空间不足（需要node_exporter）
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "磁盘空间不足 (实例 {{ $labels.instance }})"
+          description: "根分区剩余空间低于10% (当前值: {{ $value | humanizePercentage }})"
+
+      # 内存使用率高（需要node_exporter）
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "内存使用率高 (实例 {{ $labels.instance }})"
+          description: "内存使用率超过90% (当前值: {{ $value | humanizePercentage }})"

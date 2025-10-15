@@ -1,0 +1,18 @@
+[submodule "ios/SwiftPackages/Alamofire"]
+	path = ios/SwiftPackages/Alamofire
+	url = https://github.com/Alamofire/Alamofire.git
+[submodule "ios/SwiftPackages/KeychainAccess"]
+	path = ios/SwiftPackages/KeychainAccess
+	url = https://github.com/kishikawakatsumi/KeychainAccess.git
+[submodule "ios/SwiftPackages/Nuke"]
+	path = ios/SwiftPackages/Nuke
+	url = https://github.com/kean/Nuke.git
+[submodule "ios/SwiftPackages/Swinject"]
+	path = ios/SwiftPackages/Swinject
+	url = https://github.com/Swinject/Swinject.git
+[submodule "ios/SwiftPackages/realm-swift"]
+	path = ios/SwiftPackages/realm-swift
+	url = https://github.com/realm/realm-swift.git
+[submodule "ios/SwiftPackages/swift-log"]
+	path = ios/SwiftPackages/swift-log
+	url = https://github.com/apple/swift-log.git

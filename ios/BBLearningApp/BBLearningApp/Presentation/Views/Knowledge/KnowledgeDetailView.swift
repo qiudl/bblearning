@@ -18,6 +18,11 @@ struct KnowledgeDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                // 面包屑导航
+                if !viewModel.breadcrumbPath.isEmpty {
+                    BreadcrumbView(path: viewModel.breadcrumbPath)
+                }
+
                 // 标题和难度
                 headerSection
 
@@ -43,6 +48,14 @@ struct KnowledgeDetailView: View {
         }
         .navigationTitle(viewModel.knowledgePoint.name)
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: { viewModel.toggleFavorite() }) {
+                    Image(systemName: viewModel.isFavorite ? "star.fill" : "star")
+                        .foregroundColor(viewModel.isFavorite ? .yellow : .gray)
+                }
+            }
+        }
         .errorAlert(error: $viewModel.errorMessage)
         .sheet(isPresented: $showPractice) {
             // TODO: 在 Task #2426 中实现 PracticeView
@@ -138,10 +151,8 @@ struct KnowledgeDetailView: View {
                 .font(.title3)
                 .fontWeight(.semibold)
 
-            Text(description)
-                .font(.body)
-                .foregroundColor(.textSecondary)
-                .lineSpacing(4)
+            // 使用LaTeX渲染组件
+            AdaptiveMathTextView(content: description)
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.surface)
