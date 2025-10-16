@@ -2,6 +2,7 @@ import api from './api';
 
 // 配额信息接口
 export interface QuotaInfo {
+  user_id: number;
   daily_quota: number;
   daily_used: number;
   daily_remaining: number;
@@ -16,6 +17,8 @@ export interface QuotaInfo {
   monthly_reset_at: string;
   total_consumed: number;
   last_consume_at?: string;
+  last_reset_at: string;
+  next_reset_at: string;
 }
 
 // 配额日志接口
@@ -28,6 +31,9 @@ export interface QuotaLog {
   description?: string;
   created_at: string;
 }
+
+// 配额使用记录（别名，兼容性）
+export interface QuotaUsageRecord extends QuotaLog {}
 
 // 充值记录接口
 export interface RechargeLog {
@@ -65,6 +71,24 @@ class QuotaService {
       params: { page, page_size: pageSize }
     });
     return response.data;
+  }
+
+  /**
+   * 获取配额使用历史（别名，兼容性）
+   */
+  async getUsageHistory(page: number = 1, pageSize: number = 20): Promise<{
+    records: QuotaUsageRecord[];
+    total: number;
+    page: number;
+    page_size: number;
+  }> {
+    const result = await this.getQuotaLogs(page, pageSize);
+    return {
+      records: result.list,
+      total: result.total,
+      page: result.page,
+      page_size: result.size,
+    };
   }
 
   /**
@@ -189,21 +213,48 @@ class QuotaService {
    */
   getNextResetTime(quotaInfo: QuotaInfo): string {
     const now = new Date();
-    const dailyReset = new Date(quotaInfo.daily_reset_at);
-    const monthlyReset = new Date(quotaInfo.monthly_reset_at);
+    const nextReset = new Date(quotaInfo.next_reset_at || quotaInfo.daily_reset_at);
+    const diff = nextReset.getTime() - now.getTime();
 
-    if (dailyReset > now) {
-      const hours = Math.floor((dailyReset.getTime() - now.getTime()) / (1000 * 60 * 60));
-      const minutes = Math.floor(((dailyReset.getTime() - now.getTime()) % (1000 * 60 * 60)) / (1000 * 60));
-      return `日配额将在 ${hours}小时${minutes}分钟 后重置`;
+    if (diff < 0) {
+      return '即将重置';
     }
 
-    if (monthlyReset > now) {
-      const days = Math.floor((monthlyReset.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return `月配额将在 ${days}天 后重置`;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      return `${days}天后重置`;
     }
 
-    return '';
+    if (hours > 0) {
+      return `${hours}小时${minutes}分钟后重置`;
+    }
+
+    return `${minutes}分钟后重置`;
+  }
+
+  /**
+   * 格式化配额显示
+   */
+  formatQuota(quota: QuotaInfo): string {
+    return `日配额: ${quota.daily_remaining}/${quota.daily_quota} | 月配额: ${quota.monthly_remaining}/${quota.monthly_quota}${
+      quota.permanent_quota > 0 ? ` | 永久: ${quota.permanent_quota}` : ''
+    }`;
+  }
+
+  /**
+   * 获取配额状态
+   */
+  getQuotaStatus(quota: QuotaInfo): 'sufficient' | 'low' | 'depleted' {
+    if (quota.total_available === 0) {
+      return 'depleted';
+    }
+    if (quota.total_available <= 10) {
+      return 'low';
+    }
+    return 'sufficient';
   }
 }
 

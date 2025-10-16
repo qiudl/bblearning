@@ -1,0 +1,208 @@
+.ai-generate-page {
+  padding: 24px;
+  background-color: #f0f2f5;
+  min-height: calc(100vh - 64px);
+}
+
+.ai-generate-page .ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.ai-generate-page .ant-card-head {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px 8px 0 0;
+  padding: 16px 24px;
+}
+
+.ai-generate-page .ant-card-head-title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ai-generate-page .ant-card-head .ant-tag {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.15);
+  font-size: 14px;
+  padding: 4px 12px;
+}
+
+.ai-generate-page .ant-card-extra {
+  color: #fff;
+}
+
+.ai-generate-page .ant-form-item-label > label {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.ai-generate-page .ant-select,
+.ai-generate-page .ant-input-number {
+  border-radius: 6px;
+}
+
+.ai-generate-page .ant-btn {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.ai-generate-page .ant-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+.ai-generate-page .ant-btn-primary:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #653b8b 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+.ai-generate-page .ant-btn-default {
+  border-color: #d9d9d9;
+}
+
+.ai-generate-page .ant-btn-default:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.ai-generate-page .ant-list-item {
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  transition: all 0.3s;
+}
+
+.ai-generate-page .ant-list-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.ai-generate-page .ant-list-item-meta-title {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.ai-generate-page .ant-list-item-meta-description {
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.ai-generate-page .ant-tag {
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-size: 12px;
+}
+
+.ai-generate-page .ant-spin {
+  color: #667eea;
+}
+
+.ai-generate-page .ant-spin-dot-item {
+  background-color: #667eea;
+}
+
+.ai-generate-page .ant-empty {
+  padding: 48px 0;
+}
+
+.ai-generate-page .ant-alert {
+  border-radius: 6px;
+  border: none;
+}
+
+.ai-generate-page .ant-alert-info {
+  background-color: #e6f7ff;
+  border-left: 4px solid #1890ff;
+}
+
+.ai-generate-page .ant-typography {
+  margin-bottom: 0;
+}
+
+.ai-generate-page .ant-typography-secondary {
+  color: #666;
+}
+
+/* Question content styling */
+.ai-generate-page .question-option {
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.ai-generate-page .question-answer {
+  background-color: #f6ffed;
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 8px;
+}
+
+.ai-generate-page .question-explanation {
+  background-color: #fffbe6;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 12px;
+  border-left: 3px solid #faad14;
+}
+
+/* Loading state */
+.ai-generate-page .loading-container {
+  text-align: center;
+  padding: 80px 24px;
+}
+
+.ai-generate-page .loading-container .ant-spin {
+  margin-bottom: 16px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .ai-generate-page {
+    padding: 16px;
+  }
+
+  .ai-generate-page .ant-card-head-title {
+    font-size: 16px;
+  }
+
+  .ai-generate-page .ant-space {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .ai-generate-page .ant-btn {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .ai-generate-page .ant-list-item {
+    padding: 16px;
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-generate-page .ant-list-item {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.ai-generate-page .ant-card {
+  animation: fadeIn 0.4s ease-in-out;
+}
