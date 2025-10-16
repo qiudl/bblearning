@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, Input, Button, Avatar, Space, Upload, message } from 'antd';
-import { SendOutlined, CameraOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons';
+import { Card, Input, Button, Avatar, Space, Upload, message, Tag, Tooltip } from 'antd';
+import { SendOutlined, CameraOutlined, RobotOutlined, UserOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { ChatMessage } from '../../types';
 import { aiService } from '../../services/ai';
+import quotaService, { QuotaInfo } from '../../services/quota';
 import './index.css';
 
 const { TextArea } = Input;
@@ -19,6 +20,7 @@ const AIChatPage: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false); // 是否正在流式输出
+  const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | null>(null); // 配额信息
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -28,6 +30,20 @@ const AIChatPage: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // 加载配额信息
+  useEffect(() => {
+    loadQuotaInfo();
+  }, []);
+
+  const loadQuotaInfo = async () => {
+    try {
+      const quota = await quotaService.getMyQuota();
+      setQuotaInfo(quota);
+    } catch (error: any) {
+      console.error('Failed to load quota:', error);
+    }
+  };
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -84,6 +100,8 @@ const AIChatPage: React.FC = () => {
           );
           setIsStreaming(false);
           setLoading(false);
+          // 刷新配额信息
+          loadQuotaInfo();
         },
         // onError: 发生错误
         (error: string) => {
@@ -176,6 +194,8 @@ const AIChatPage: React.FC = () => {
             }
 
             setLoading(false);
+            // 刷新配额信息
+            loadQuotaInfo();
             resolve();
           } catch (error) {
             reject(error);
@@ -201,7 +221,22 @@ const AIChatPage: React.FC = () => {
           AI问答助手
         </Space>
       }
-      extra={<span style={{ fontSize: '12px', color: '#999' }}>今日剩余提问次数：7/10</span>}
+      extra={
+        quotaInfo ? (
+          <Space>
+            <Tooltip title={quotaService.getNextResetTime(quotaInfo)}>
+              <Tag icon={<ThunderboltOutlined />} color={quotaInfo.total_available > 10 ? 'success' : quotaInfo.total_available > 0 ? 'warning' : 'error'}>
+                可用配额: {quotaInfo.total_available}
+              </Tag>
+            </Tooltip>
+            {quotaInfo.is_vip && (
+              <Tag color="gold">VIP</Tag>
+            )}
+          </Space>
+        ) : (
+          <span style={{ fontSize: '12px', color: '#999' }}>加载中...</span>
+        )
+      }
       bodyStyle={{ height: 'calc(100vh - 280px)', display: 'flex', flexDirection: 'column' }}
     >
       <div className="chat-messages" style={{ flex: 1, overflowY: 'auto', marginBottom: 16 }}>
