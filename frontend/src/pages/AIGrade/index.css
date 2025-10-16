@@ -1,0 +1,231 @@
+.ai-grade-page {
+  padding: 24px;
+  background-color: #f0f2f5;
+  min-height: calc(100vh - 64px);
+}
+
+.ai-grade-page .ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.ai-grade-page .ant-card-head {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px 8px 0 0;
+  padding: 16px 24px;
+}
+
+.ai-grade-page .ant-card-head-title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ai-grade-page .ant-form-item-label > label {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.ai-grade-page .ant-input,
+.ai-grade-page textarea {
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.ai-grade-page .ant-btn {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.ai-grade-page .ant-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+.ai-grade-page .ant-btn-primary:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #653b8b 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+.ai-grade-page .ant-alert {
+  border-radius: 6px;
+  border: none;
+}
+
+.ai-grade-page .ant-alert-info {
+  background-color: #e6f7ff;
+  border-left: 4px solid #1890ff;
+}
+
+/* 批改结果样式 */
+.grade-result-header {
+  padding: 24px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.score-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+}
+
+.score-circle {
+  position: relative;
+}
+
+.score-content {
+  text-align: center;
+}
+
+.score-number {
+  font-size: 36px;
+  font-weight: bold;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.score-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.score-info {
+  flex: 1;
+  max-width: 300px;
+}
+
+/* 反馈区域 */
+.feedback-section,
+.suggestion-section,
+.keypoints-section {
+  margin-bottom: 16px;
+}
+
+.feedback-content,
+.suggestion-content {
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  border-left: 4px solid #1890ff;
+  font-size: 15px;
+  line-height: 1.8;
+  margin-bottom: 0;
+}
+
+.suggestion-content {
+  border-left-color: #faad14;
+  background-color: #fffbe6;
+}
+
+.keypoints-section .ant-list-item {
+  padding: 12px 0;
+  border-bottom: 1px dashed #e8e8e8;
+}
+
+.keypoints-section .ant-list-item:last-child {
+  border-bottom: none;
+}
+
+.keypoints-section .ant-tag {
+  font-weight: bold;
+  min-width: 28px;
+  text-align: center;
+}
+
+/* 加载状态 */
+.ai-grade-page .loading-container {
+  text-align: center;
+  padding: 80px 24px;
+}
+
+.ai-grade-page .ant-spin {
+  color: #667eea;
+}
+
+.ai-grade-page .ant-spin-dot-item {
+  background-color: #667eea;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .ai-grade-page {
+    padding: 16px;
+  }
+
+  .score-section {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .score-info {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .grade-result-header {
+    padding: 16px;
+  }
+
+  .ai-grade-page .ant-btn {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-grade-page .ant-card {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.feedback-section,
+.suggestion-section,
+.keypoints-section {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+/* Progress 圆环自定义样式 */
+.ai-grade-page .ant-progress-circle .ant-progress-text {
+  color: #333;
+  font-weight: bold;
+}
+
+/* Tag 样式优化 */
+.ai-grade-page .ant-tag {
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Divider 样式 */
+.ai-grade-page .ant-divider {
+  margin: 24px 0;
+  border-color: #e8e8e8;
+}
+
+/* Title 样式 */
+.ai-grade-page .ant-typography h5 {
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.ai-grade-page .ant-typography h5 .anticon {
+  margin-right: 8px;
+  color: #667eea;
+}
