@@ -1,0 +1,281 @@
+.ai-diagnose-page {
+  padding: 24px;
+  background-color: #f0f2f5;
+  min-height: calc(100vh - 64px);
+}
+
+.ai-diagnose-page .ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.ai-diagnose-page .ant-card-head {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px 8px 0 0;
+  padding: 16px 24px;
+}
+
+.ai-diagnose-page .ant-card-head-title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ai-diagnose-page .ant-card-extra .ant-btn-primary {
+  background: #fff;
+  color: #667eea;
+  border: none;
+}
+
+.ai-diagnose-page .ant-card-extra .ant-btn-primary:hover {
+  background: #f0f0f0;
+  color: #5568d3;
+}
+
+.ai-diagnose-page .ant-alert {
+  border-radius: 6px;
+  border: none;
+}
+
+.ai-diagnose-page .ant-alert-info {
+  background-color: #e6f7ff;
+  border-left: 4px solid #1890ff;
+}
+
+.ai-diagnose-page .ant-alert-warning {
+  background-color: #fffbe6;
+  border-left: 4px solid #faad14;
+}
+
+/* 整体水平 */
+.overall-level {
+  text-align: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 8px;
+}
+
+.overall-level .ant-statistic {
+  display: inline-block;
+}
+
+.overall-level .ant-statistic-title {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.overall-level .ant-statistic-content {
+  font-size: 32px;
+  font-weight: bold;
+}
+
+/* 薄弱点卡片 */
+.weak-point-card {
+  border: 2px solid #f0f0f0;
+  transition: all 0.3s;
+}
+
+.weak-point-card:hover {
+  border-color: #ff4d4f;
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.15);
+  transform: translateY(-2px);
+}
+
+.weak-point-header {
+  margin-bottom: 16px;
+}
+
+.weak-point-header .ant-tag {
+  font-weight: bold;
+}
+
+.mastery-progress,
+.error-progress {
+  text-align: center;
+}
+
+.mastery-progress .ant-progress,
+.error-progress .ant-progress {
+  margin: 12px 0;
+}
+
+.common-mistakes {
+  background-color: #fff7e6;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #faad14;
+}
+
+.common-mistakes .ant-list-item {
+  padding: 4px 0;
+}
+
+/* 学习建议列表 */
+.ai-diagnose-page .ant-list-item {
+  padding: 16px 0;
+  border-bottom: 1px dashed #e8e8e8;
+}
+
+.ai-diagnose-page .ant-list-item:last-child {
+  border-bottom: none;
+}
+
+/* 加载状态 */
+.ai-diagnose-page .ant-spin {
+  color: #667eea;
+}
+
+.ai-diagnose-page .ant-spin-dot-item {
+  background-color: #667eea;
+}
+
+/* 按钮样式 */
+.ai-diagnose-page .ant-btn {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.ai-diagnose-page .ant-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+.ai-diagnose-page .ant-btn-primary:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #653b8b 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Tag 样式 */
+.ai-diagnose-page .ant-tag {
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+/* Typography 样式 */
+.ai-diagnose-page .ant-typography h5 {
+  color: #333;
+  font-weight: 600;
+}
+
+.ai-diagnose-page .ant-typography h5 .anticon {
+  margin-right: 8px;
+  color: #667eea;
+}
+
+.ai-diagnose-page .ant-typography p {
+  color: #666;
+  line-height: 1.8;
+}
+
+/* Progress 样式 */
+.ai-diagnose-page .ant-progress-text {
+  font-weight: 600;
+}
+
+/* Divider 样式 */
+.ai-diagnose-page .ant-divider {
+  margin: 24px 0;
+  border-color: #e8e8e8;
+}
+
+/* Empty 样式 */
+.ai-diagnose-page .ant-empty {
+  padding: 48px 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .ai-diagnose-page {
+    padding: 16px;
+  }
+
+  .ai-diagnose-page .ant-card-head-title {
+    font-size: 16px;
+  }
+
+  .overall-level .ant-statistic-content {
+    font-size: 24px;
+  }
+
+  .weak-point-card .ant-row {
+    flex-direction: column;
+  }
+
+  .weak-point-card .ant-col {
+    width: 100% !important;
+    margin-bottom: 16px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.weak-point-card {
+  animation: slideIn 0.5s ease-in-out;
+}
+
+.weak-point-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.weak-point-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.weak-point-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.weak-point-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.weak-point-card:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+/* 图标颜色 */
+.ai-diagnose-page .anticon-check-circle {
+  color: #52c41a;
+}
+
+.ai-diagnose-page .anticon-warning {
+  color: #faad14;
+}
+
+.ai-diagnose-page .anticon-trophy {
+  color: #faad14;
+}
+
+.ai-diagnose-page .anticon-bulb {
+  color: #1890ff;
+}
+
+.ai-diagnose-page .anticon-rocket {
+  color: #722ed1;
+}
