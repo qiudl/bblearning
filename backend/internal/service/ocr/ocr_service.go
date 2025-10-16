@@ -1,7 +1,9 @@
 package ocr
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,9 +11,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/qiudl/bblearning-backend/internal/domain/dto"
 	"github.com/qiudl/bblearning-backend/internal/domain/models"
 	"github.com/qiudl/bblearning-backend/internal/pkg/crypto"
+	"github.com/qiudl/bblearning-backend/internal/pkg/storage"
 	"github.com/qiudl/bblearning-backend/internal/repository/postgres"
 	"github.com/qiudl/bblearning-backend/internal/service"
 	"github.com/spf13/viper"
@@ -157,8 +161,16 @@ func (s *OCRService) recognizeWithTencent(ctx context.Context, imageBase64 strin
 		}
 	}
 
+	// 上传图片到MinIO
+	imageURL, err := s.uploadImageToMinIO(ctx, imageBase64)
+	if err != nil {
+		// 上传失败不影响OCR结果，仅记录错误
+		fmt.Printf("Failed to upload image to MinIO: %v\n", err)
+		imageURL = ""
+	}
+
 	return &dto.OCRRecognizeResponse{
-		ImageURL:       "", // TODO: 上传到MinIO后返回URL
+		ImageURL:       imageURL,
 		RecognizedText: recognizedText,
 		Question:       question,
 		Confidence:     confidence,
@@ -317,4 +329,33 @@ func (s *OCRService) serializeOptions(options []string) string {
 	}
 	data, _ := json.Marshal(options)
 	return string(data)
+}
+
+// uploadImageToMinIO 上传Base64图片到MinIO
+func (s *OCRService) uploadImageToMinIO(ctx context.Context, imageBase64 string) (string, error) {
+	// 解码Base64图片
+	imageData, err := base64.StdEncoding.DecodeString(imageBase64)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode base64 image: %w", err)
+	}
+
+	// 生成唯一文件名
+	objectName := fmt.Sprintf("ocr/%s/%s.jpg",
+		time.Now().Format("2006/01/02"),
+		uuid.New().String())
+
+	// 上传到MinIO
+	reader := bytes.NewReader(imageData)
+	err = storage.UploadFile(ctx, objectName, reader, int64(len(imageData)), "image/jpeg")
+	if err != nil {
+		return "", fmt.Errorf("failed to upload to MinIO: %w", err)
+	}
+
+	// 获取访问URL
+	imageURL, err := storage.GetFileURL(ctx, objectName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get file URL: %w", err)
+	}
+
+	return imageURL, nil
 }
