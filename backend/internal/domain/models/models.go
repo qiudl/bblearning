@@ -120,6 +120,7 @@ type AIConversation struct {
 	QuestionID *uint          `gorm:"index" json:"questionId"` // 关联题目(可选)
 	Role       string         `gorm:"size:20;not null" json:"role"` // user, assistant, system
 	Content    string         `gorm:"type:text;not null" json:"content"`
+	ImageURLs  []string       `gorm:"type:text[];default:ARRAY[]::TEXT[]" json:"imageUrls"` // MinIO存储的图片URL列表
 	Metadata   string         `gorm:"type:jsonb" json:"metadata"` // 额外信息(token数、模型等)
 	CreatedAt  time.Time      `json:"createdAt"`
 	UpdatedAt  time.Time      `json:"updatedAt"`
