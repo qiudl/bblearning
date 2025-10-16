@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { message } from 'antd';
 import { API_CONFIG } from '../config/api';
+import { ErrorHandler, ErrorCode } from '../utils/errorHandler';
 
 // 创建 axios 实例
 const apiClient: AxiosInstance = axios.create({
@@ -54,6 +54,7 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
+        // Token刷新失败，清除认证信息并跳转登录
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         window.location.href = '/login';
@@ -61,34 +62,19 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // 处理其他错误
-    if (error.response) {
-      const { status, data } = error.response;
-
-      switch (status) {
-        case 401:
-          message.error('未授权，请重新登录');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
-          break;
-        case 403:
-          message.error('没有权限访问');
-          break;
-        case 404:
-          message.error('请求的资源不存在');
-          break;
-        case 500:
-          message.error('服务器错误');
-          break;
-        default:
-          message.error(data?.message || '请求失败');
-      }
-    } else if (error.request) {
-      message.error('网络错误，请检查网络连接');
-    } else {
-      message.error('请求配置错误');
-    }
+    // 使用统一错误处理器
+    const errorResponse = ErrorHandler.handle(error, {
+      showMessage: true,
+      onUnauthorized: () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+      },
+      onQuotaInsufficient: () => {
+        // 可以跳转到配额充值页面
+        console.log('配额不足，请充值');
+      },
+    });
 
     return Promise.reject(error);
   }
